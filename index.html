@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#a4243b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Biblioteca">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Biblioteca Clínica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+/* Layout: encabezado fijo, lista desplazable, barra inferior de pestañas; ficha a pantalla completa. */
+:root{
+  --bg:#f2f4f7; --surface:#ffffff; --ink:#16202e; --muted:#586377; --line:#dce1e8;
+  --accent:#a4243b; --accent-ink:#ffffff; --soft:#e8ecf2;
+  --font-display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f141c; --surface:#18202b; --ink:#e8edf4; --muted:#9aa6b8; --line:#2a3544;
+    --accent:#e26b80; --accent-ink:#1a0b10; --soft:#212c3a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f141c; --surface:#18202b; --ink:#e8edf4; --muted:#9aa6b8; --line:#2a3544;
+  --accent:#e26b80; --accent-ink:#1a0b10; --soft:#212c3a; color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{height:100%;display:flex;flex-direction:column;max-width:760px;margin:0 auto}
+header.top{padding:14px 16px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+header.top h1{font-family:var(--font-display);font-size:22px;line-height:1.15;margin:0;font-weight:600;text-wrap:balance}
+header.top p{margin:3px 0 0;color:var(--muted);font-size:12.5px}
+main{flex:1;overflow-y:auto;padding:12px 16px 24px;-webkit-overflow-scrolling:touch}
+nav.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{background:none;border:0;padding:11px 2px 10px;color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;border-top:3px solid transparent}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+nav.tabs .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:10px;background:var(--soft);color:var(--ink);font-size:11.5px;font-variant-numeric:tabular-nums}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.tools input[type=search]{grid-column:1/-1}
+.tools input,.tools select,.field input,.field textarea,.field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:40px}
+.tools select{min-width:0}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 13px;display:flex;flex-direction:column;gap:8px}
+.card h3{font-family:var(--font-display);font-size:16.5px;line-height:1.25;margin:0;font-weight:600;text-wrap:balance}
+.card .cite{color:var(--muted);font-size:12.5px}
+.card .res{font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--ink);white-space:nowrap}
+.chip.lvl{background:var(--ink);color:var(--bg);font-weight:600}
+.chip.src{border:1px solid var(--line);background:transparent;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;cursor:pointer;min-height:38px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.quiet{border-color:transparent;color:var(--muted)}
+.btn[disabled]{opacity:.5;cursor:default}
+.stars{display:inline-flex;gap:2px}
+.stars button{background:none;border:0;padding:4px 2px;font-size:18px;line-height:1;cursor:pointer;color:var(--line)}
+.stars button.on{color:var(--accent)}
+.empty{padding:28px 8px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--font-display);font-size:17px;margin-bottom:4px}
+.note{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:13.5px;color:var(--ink)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-weight:600;font-size:13px}
+.field textarea{min-height:170px;resize:vertical}
+h2.sec{font-family:var(--font-display);font-size:18px;margin:0 0 8px;font-weight:600}
+#detail{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:20;display:none;-webkit-overflow-scrolling:touch}
+#detail.open{display:block}
+.sheet{max-width:760px;margin:0 auto;padding:0 16px 40px}
+.sheet .bar{position:sticky;top:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);z-index:2}
+.sheet h2{font-family:var(--font-display);font-size:21px;line-height:1.2;margin:14px 0 6px;text-wrap:balance}
+.sheet .vanc{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:10px 12px;font-size:13.5px;margin:10px 0}
+dl.fields{display:grid;gap:12px;margin:14px 0}
+dl.fields dt{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+dl.fields dd{margin:2px 0 0;max-width:68ch}
+.diag{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;margin:12px 0;overflow-x:auto}
+.diag svg{display:block;width:100%;height:auto;max-width:420px;margin:0 auto}
+.foot{color:var(--muted);font-size:12px;margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13.5px;z-index:40;max-width:90%}
+.spin{color:var(--muted);font-size:13px}
+.sg{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.sg-plus{background:rgba(63,139,90,.20)} .sg-eq{background:var(--soft)} .sg-minus{background:rgba(164,36,59,.20)} .sg-na{border:1px dashed var(--muted);color:var(--muted)}
+.orow{display:grid;grid-template-columns:1fr;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.orow:first-of-type{border-top:0}
+.pico{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px;margin:8px 0}
+.pico b{color:var(--accent)}
+.gap{border-left:3px solid var(--accent);padding:2px 0 2px 10px;margin:10px 0}
+.gap b{display:block}
+ol.refs{padding-left:20px;font-size:13px} ol.refs li{margin-bottom:6px}
+.msg{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:12px;font-family:var(--font-display);font-size:16.5px;line-height:1.4;margin:12px 0}
+@media (prefers-reduced-motion: no-preference){ .card{transition:border-color .15s} .card:hover{border-color:var(--accent)} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <h1>Biblioteca Clínica</h1>
+    <p>Dr. Juan Fernando Carvajal Estupiñán · Cardiólogo e internista</p>
+  </header>
+  <main id="main" aria-live="polite"></main>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones">
+    <button role="tab" data-tab="buscar" aria-selected="true">Buscar</button>
+    <button role="tab" data-tab="candidatos" aria-selected="false">Candidatos<span class="n" id="n-cand">0</span></button>
+    <button role="tab" data-tab="biblioteca" aria-selected="false">Biblioteca<span class="n" id="n-bib">0</span></button>
+    <button role="tab" data-tab="analisis" aria-selected="false">Análisis<span class="n" id="n-an">0</span></button>
+    <button role="tab" data-tab="anadir" aria-selected="false">Añadir</button>
+  </nav>
+</div>
+<div id="detail" role="dialog" aria-modal="true" aria-label="Ficha del artículo"></div>
+<div id="toast" class="toast" style="display:none" role="status"></div>
+
+<script src="standalone.js"></script>
+<script src="jspdf.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------- utilidades ---------- */
+var $ = function(s){ return document.querySelector(s); };
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function toast(msg){
+  var t=$("#toast"); t.textContent=msg; t.style.display="block";
+  clearTimeout(toast._t); toast._t=setTimeout(function(){t.style.display="none";},3200);
+}
+var DISENOS = {
+  rs:"Revisión sistemática / metaanálisis", eca:"Ensayo clínico aleatorizado",
+  cohorte:"Cohorte / observacional", guia:"Guía de práctica", revision:"Revisión narrativa", otro:"Otro"
+};
+var NIVEL = { rs:"Nivel 1", eca:"Nivel 2", cohorte:"Nivel 3", guia:"Guía", revision:"Nivel 5", otro:"—" };
+var AUTORIA = "Dr. Juan Fernando Carvajal Estupiñán · Cardiólogo e internista · Bucaramanga, Colombia";
+
+/* ---------- estado ---------- */
+var SA = window.__standalone||null;
+var S = { items:[], tab:"buscar", f:{q:"",tema:"",diseno:"",orden:"relevancia"}, openId:null, add:{busy:false,preview:null,err:""}, db:null, sample:null, downloads:null, loaded:false, slow:false, an:[], anOpen:null, bq:[], gen:{}, mcp:null, drive:false, bu:{q:"",carp:"",tipo:"",desde:"",busy:false,msg:"",err:"",estr:""}, ex:{busy:false,msg:"",err:"",tema:""} };
+
+/* ---------- capacidades ---------- */
+function getUse(name){
+  try{ if(window.claude && typeof window.claude.use==="function"){ return window.claude.use(name).catch(function(){return null;}); } }catch(e){}
+  return Promise.resolve(null);
+}
+Promise.all([getUse("db"),getUse("sample"),getUse("downloads"),getUse("user"),getUse("mcp")]).then(function(r){
+  S.db=r[0]; S.sample=r[1]; S.downloads=r[2]; S.mcp=r[4]; S.drive=!!(S.mcp&&(typeof S.mcp.hasServer!=="function"||S.mcp.hasServer("Google Drive")));
+  if(S.db){ subscribe(); } else { S.loaded=true; S.slow=false; S.dbErr="nodb"; S.diag="sin acceso a la base de datos en esta vista"; }
+  render();
+});
+function diagLine(){
+  return '<p style="margin:0 0 10px;font-size:11.5px;color:var(--muted)">Conexión: '+esc(S.diag||"iniciando…")+' · v10</p>'+(S.saveErr?'<div class="note" style="margin-bottom:12px"><b>'+esc(S.saveErr)+'</b></div>':'');
+}
+function banner(){
+  if(S.dbErr==="nodb") return diagLine()+'<div class="note" style="margin-bottom:12px"><b>La biblioteca no está conectada en esta vista.</b> Recarga la página.</div>';
+  if(S.dbErr) return diagLine()+'<div class="note" style="margin-bottom:12px"><b>No se pudo leer la biblioteca</b> ('+esc(S.dbErr.replace("err:",""))+'). Cierra y vuelve a abrir el enlace.</div>';
+  return diagLine();
+}
+function banner_old(){
+  if(S.dbErr==="nodb") return '<div class="note" style="margin-bottom:12px"><b>La biblioteca no está conectada en esta vista.</b> Abre el enlace dentro de la app de Claude o en claude.ai con tu sesión iniciada; desde un navegador sin sesión no se ven los artículos.</div>';
+  if(S.dbErr) return '<div class="note" style="margin-bottom:12px"><b>No se pudo leer la biblioteca</b> ('+esc(S.dbErr.replace("err:",""))+'). Cierra y vuelve a abrir el enlace.</div>';
+  return "";
+}
+
+function rowsOf(snap){
+  var arr=null;
+  if(snap && Array.isArray(snap.docs)) arr=snap.docs;
+  else if(Array.isArray(snap)) arr=snap;
+  else if(snap && typeof snap.forEach==="function"){ arr=[]; snap.forEach(function(d){arr.push(d);}); }
+  if(!arr) throw new Error("forma inesperada: "+(snap===null?"null":typeof snap)+" "+(snap&&typeof snap==="object"?Object.keys(snap).slice(0,6).join(","):""));
+  return arr.map(function(d){
+    var o=(typeof d.data==="function"?d.data():(d.data||d))||{};
+    o=Object.assign({},o); o.id=d.id||o.id; return o;
+  });
+}
+function errText(e){ return (e&&(e.code||e.message))||String(e); }
+function subscribe(){
+  var timer=setTimeout(function(){ if(!S.loaded){ S.slow=true; render(); } },10000);
+  S.diag="base de datos conectada; esperando datos…"; render();
+  try{
+    S.db.collection("articles").onSnapshot(function(snap){
+      try{
+        var cache=!!(snap&&snap.metadata&&snap.metadata.fromCache);
+        S.items=rowsOf(snap);
+        S.diag="base conectada · "+S.items.length+" artículos"+(cache?" (copia local, esperando al servidor)":"");
+        if(!(cache && !S.items.length)){ clearTimeout(timer); S.loaded=true; S.slow=false; }
+      }catch(e){ S.diag="lectura falló: "+errText(e); }
+      render();
+    }, function(e){ clearTimeout(timer); S.loaded=true; S.diag="error de suscripción: "+errText(e); render(); });
+  }catch(e){ clearTimeout(timer); S.loaded=true; S.diag="error al suscribirse: "+errText(e); render(); }
+  try{
+    S.db.collection("busquedas").onSnapshot(function(snap){
+      try{ S.bq=rowsOf(snap); }catch(e){ S.bq=[]; }
+      if(S.tab==="biblioteca") render();
+    }, function(){});
+  }catch(e){}
+  try{
+    S.db.collection("analisis").onSnapshot(function(snap){
+      try{ S.an=rowsOf(snap); }catch(e){ S.an=[]; }
+      var c=$("#n-an"); if(c) c.textContent=S.an.length;
+      if(S.tab==="analisis") render(); else renderDetail();
+    }, function(){});
+  }catch(e){}
+  setTimeout(function(){
+    if(S.items.length || !S.db) return;
+    var p; try{ p=S.db.collection("articles").get(); }catch(e){ S.diag="get() falló: "+errText(e); render(); return; }
+    Promise.resolve(p).then(function(snap){
+      var rows=rowsOf(snap);
+      if(rows.length){ S.items=rows; S.diag="lectura directa · "+rows.length+" artículos"; S.loaded=true; }
+      else S.diag="base conectada, pero la colección llegó vacía";
+      render();
+    }).catch(function(e){ S.diag="lectura directa falló: "+errText(e); render(); });
+  },4000);
+}
+
+function save(id, patch){
+  if(!S.db){ toast("La biblioteca no está disponible en esta vista."); return Promise.resolve(); }
+  /* cambio inmediato en pantalla; si la escritura falla, se revierte y se explica */
+  var it=S.items.filter(function(x){return x.id===id;})[0], before=null;
+  if(it){ before={}; Object.keys(patch).forEach(function(k){ before[k]=it[k]; it[k]=patch[k]; }); refresh(); }
+  var p;
+  try{ p=S.db.collection("articles").doc(id).update(patch); }
+  catch(e){ return failSave(it,before,e); }
+  return Promise.resolve(p).then(function(){ S.saveErr=""; },function(e){ return failSave(it,before,e); });
+}
+function failSave(it,before,e){
+  if(it&&before){ Object.keys(before).forEach(function(k){ if(before[k]===undefined) delete it[k]; else it[k]=before[k]; }); }
+  S.saveErr="No se pudo guardar el cambio: "+errText(e);
+  toast(S.saveErr); render(); return Promise.resolve();
+}
+
+/* ---------- citas ---------- */
+function vancouver(a){
+  var au;
+  var list=(a.autores||[]).filter(Boolean);
+  if(!list.length){ au="[Autores por verificar]"; }
+  else if(list.length>6){ au=list.slice(0,6).join(", ")+", et al"; }
+  else if(a.autoresCompletos===false){ au=list.join(", ")+", et al"; }
+  else { au=list.join(", "); }
+  var t=(a.titulo||"").replace(/[.\s]+$/,"");
+  var j=a.revista?(" "+a.revista+"."):"";
+  var y=a.anio?(" "+a.anio):"";
+  var vol=a.volumen?(";"+a.volumen):"";
+  var pag=a.paginas?(":"+a.paginas):"";
+  var loc=(y||vol||pag)?(y+vol+pag+"."):"";
+  var ids=[]; if(a.doi) ids.push("doi:"+a.doi); if(a.pmid) ids.push("PMID: "+a.pmid);
+  return au+". "+t+"."+j+loc+(ids.length?" "+ids.join(". ")+".":"");
+}
+function shortCite(a){
+  var first=(a.autores&&a.autores[0])?a.autores[0].split(" ")[0]+" et al.":"";
+  return [first,a.revista,a.anio].filter(Boolean).join(" · ");
+}
+
+/* ---------- ficha: texto, diagrama, documento ---------- */
+function sumField(a,k){ return (a.resumen&&a.resumen[k])||""; }
+function fichaTexto(a){
+  var L=[];
+  L.push("FICHA BIBLIOGRÁFICA");
+  L.push(a.titulo||""); L.push("");
+  L.push("Referencia (Vancouver): "+vancouver(a)); L.push("");
+  L.push("Diseño: "+(DISENOS[a.diseno]||"—")+" ("+(NIVEL[a.diseno]||"—")+") · Tema: "+(a.tema||"—")+" · Fuente del resumen: "+(a.fuente||"abstract"));
+  L.push("");
+  [["pregunta","Pregunta"],["poblacion","Población"],["intervencion","Intervención / exposición"],["comparador","Comparador"],["resultado","Resultado clave"],["limitaciones","Limitaciones"],["docencia","Mensaje para enseñar"]].forEach(function(p){
+    var v=sumField(a,p[0]); if(v){ L.push(p[1]+": "+v); }
+  });
+  L.push("");
+  if(a.url) L.push("Enlace: "+a.url);
+  L.push("Resumen elaborado con IA a partir del "+(a.fuente||"abstract")+"; verificar con el texto original antes de citar.");
+  L.push("Elaborado por "+AUTORIA);
+  return L.join("\n");
+}
+function wrapLines(text,max,maxLines){
+  var words=String(text||"").split(/\s+/).filter(Boolean), lines=[], cur="";
+  for(var i=0;i<words.length;i++){
+    var w=words[i];
+    if((cur+" "+w).trim().length>max){ lines.push(cur); cur=w; } else { cur=(cur+" "+w).trim(); }
+  }
+  if(cur) lines.push(cur);
+  if(lines.length>maxLines){ lines=lines.slice(0,maxLines); lines[maxLines-1]=lines[maxLines-1].replace(/[\s,;.]+$/,"")+"…"; }
+  return lines;
+}
+function diagramaSVG(a){
+  var rows=[
+    {k:"poblacion",lab:"POBLACIÓN",fill:"#e3ebf7",stroke:"#5b7db1"},
+    {k:"intervencion",lab:"INTERVENCIÓN / EXPOSICIÓN",fill:"#f6e1e5",stroke:"#a4243b"},
+    {k:"comparador",lab:"COMPARADOR",fill:"#eceef2",stroke:"#7b8596"},
+    {k:"resultado",lab:"RESULTADO CLAVE",fill:"#e1f0e6",stroke:"#3f8b5a"}
+  ];
+  var W=380, y=34, out=[], i;
+  var head=(DISENOS[a.diseno]||"Estudio")+" · "+(NIVEL[a.diseno]||"");
+  out.push('<text x="'+W/2+'" y="20" text-anchor="middle" font-size="13" font-weight="600" fill="#16202e">'+esc(head)+'</text>');
+  for(i=0;i<rows.length;i++){
+    var r=rows[i], txt=sumField(a,r.k)||"No consta en el resumen";
+    var lines=wrapLines(txt,50,3), h=26+lines.length*15;
+    out.push('<rect x="10" y="'+y+'" width="'+(W-20)+'" height="'+h+'" rx="8" fill="'+r.fill+'" stroke="'+r.stroke+'" stroke-width="1.2"/>');
+    out.push('<text x="20" y="'+(y+16)+'" font-size="10" font-weight="700" letter-spacing=".6" fill="'+r.stroke+'">'+r.lab+'</text>');
+    for(var j=0;j<lines.length;j++){
+      out.push('<text x="20" y="'+(y+32+j*15)+'" font-size="12.5" fill="#16202e">'+esc(lines[j])+'</text>');
+    }
+    y+=h;
+    if(i<rows.length-1){
+      out.push('<path d="M'+W/2+' '+(y+1)+' v10 m-5 -5 l5 6 l5 -6" fill="none" stroke="#7b8596" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>');
+      y+=14;
+    }
+  }
+  var H=y+12;
+  return '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Esquema del estudio: población, intervención, comparador y resultado" font-family="IBM Plex Sans, Arial, sans-serif">'+out.join("")+'</svg>';
+}
+function fichaHTML(a){
+  var rows=[["pregunta","Pregunta"],["poblacion","Población"],["intervencion","Intervención / exposición"],["comparador","Comparador"],["resultado","Resultado clave"],["limitaciones","Limitaciones"],["docencia","Mensaje para enseñar"]];
+  var dl=rows.map(function(p){ var v=sumField(a,p[0]); return v?('<dt>'+p[1]+'</dt><dd>'+esc(v)+'</dd>'):""; }).join("");
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ficha: '+esc(a.titulo)+'</title><style>'+
+  'body{font-family:Arial,Helvetica,sans-serif;color:#16202e;max-width:720px;margin:0 auto;padding:20px 16px;line-height:1.5;background:#fff}'+
+  'h1{font-family:Georgia,serif;font-size:22px;line-height:1.25;margin:6px 0 10px}.tag{font-size:12px;letter-spacing:.08em;color:#a4243b;font-weight:700}'+
+  '.v{border-left:4px solid #a4243b;background:#f4f6f9;padding:10px 12px;font-size:14px;margin:12px 0}dt{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#586377;font-weight:700;margin-top:12px}dd{margin:2px 0 0}'+
+  '.d{border:1px solid #dce1e8;border-radius:10px;padding:6px;margin:16px 0}.d svg{display:block;width:100%;max-width:420px;height:auto;margin:0 auto}.f{font-size:12px;color:#586377;border-top:1px solid #dce1e8;margin-top:22px;padding-top:10px}'+
+  '</style></head><body><div class="tag">FICHA BIBLIOGRÁFICA</div><h1>'+esc(a.titulo)+'</h1><div class="v">'+esc(vancouver(a))+'</div>'+
+  '<p style="font-size:13px;color:#586377">'+esc(DISENOS[a.diseno]||"")+' · '+esc(NIVEL[a.diseno]||"")+(a.tema?' · '+esc(a.tema):'')+' · Fuente del resumen: '+esc(a.fuente||"abstract")+'</p>'+
+  '<div class="d">'+diagramaSVG(a)+'</div><dl>'+dl+'</dl>'+(a.url?'<p><a href="'+esc(a.url)+'">'+esc(a.url)+'</a></p>':'')+
+  '<div class="f">Resumen elaborado con IA a partir del '+esc(a.fuente||"abstract")+'; verificar con el texto original antes de citar.<br>Elaborado por '+esc(AUTORIA)+'</div></body></html>';
+}
+
+
+/* ---------- análisis conjunto ---------- */
+var SG={"+":["sg-plus","A favor de la intervención"],"=":["sg-eq","Sin diferencia"],"-":["sg-minus","A favor del comparador"],"na":["sg-na","Sin dato"]};
+function viewAnalisisLista(){
+  var h='<h2 class="sec">Análisis conjunto</h2><p style="margin:0 0 12px;color:var(--muted)">Síntesis de los artículos guardados de un mismo tema: qué dice la evidencia, qué falta y qué estudiar después.</p>';
+  if(!S.an.length) return h+'<div class="empty"><b>Aún no hay análisis</b>Guarda varios artículos de un tema y pide el análisis conjunto en el chat con Claude.</div>';
+  var rows=S.an.slice().sort(function(a,b){return String(b.fecha).localeCompare(String(a.fecha));});
+  return h+'<div class="list">'+rows.map(function(a){
+    return '<article class="card"><h3>'+esc(a.titulo)+'</h3><div class="cite">'+esc(a.fecha||"")+' · '+esc(a.tema||"")+'</div>'+
+    '<div class="res">'+esc(a.mensaje||"")+'</div><div class="chips"><span class="chip">'+((a.incluidos||[]).length)+' artículos</span><span class="chip">'+((a.vacios||[]).length)+' vacíos</span><span class="chip">'+((a.preguntas||[]).length)+' preguntas</span></div>'+
+    '<div class="row"><button class="btn primary" data-act="abrir-an" data-id="'+esc(a.id)+'">Abrir análisis</button></div></article>';
+  }).join("")+'</div>';
+}
+function anBody(a){
+  var pq=a.pregunta||{};
+  var h='<h2>'+esc(a.titulo)+'</h2><div class="chips"><span class="chip lvl">Revisión express</span>'+(a.version?'<span class="chip">v'+esc(a.version)+'</span>':'')+'<span class="chip">'+esc(a.fecha||"")+'</span>'+(a.tema?'<span class="chip">'+esc(a.tema)+'</span>':'')+'</div>';
+  h+='<div class="msg">'+esc(a.mensaje||"")+'</div>';
+  if((a.cambios||[]).length) h+='<h2 class="sec" style="margin-top:18px">Cambios respecto a la versión anterior</h2><ul style="margin:0;padding-left:20px">'+a.cambios.map(function(c){return '<li>'+esc(c)+'</li>';}).join("")+'</ul>';
+  h+='<h2 class="sec" style="margin-top:18px">Pregunta</h2><p style="margin:0 0 6px">'+esc(pq.texto||"")+'</p>'+
+     '<div class="pico"><b>P</b><span>'+esc(pq.p||"")+'</span><b>I</b><span>'+esc(pq.i||"")+'</span><b>C</b><span>'+esc(pq.c||"")+'</span><b>O</b><span>'+esc(pq.o||"")+'</span></div>';
+  h+='<p style="font-size:13.5px;color:var(--muted)">'+esc(a.alcance||"")+'</p>';
+  h+='<h2 class="sec" style="margin-top:18px">Estudios incluidos</h2>'+(a.incluidos||[]).map(function(i){ return '<div class="orow"><b>'+esc(i.corto)+'</b><span>'+esc(i.diseno)+' · '+esc(i.n)+' · <i>'+esc(i.fuente)+'</i></span></div>'; }).join("");
+  h+='<h2 class="sec" style="margin-top:18px">Evidencia por desenlace</h2><p style="font-size:12.5px;color:var(--muted);margin:0 0 6px">La certeza es un juicio cualitativo, no una evaluación GRADE formal.</p>';
+  (a.desenlaces||[]).forEach(function(d){
+    h+='<div class="card" style="margin-bottom:10px"><h3>'+esc(d.nombre)+'</h3><div class="chips"><span class="chip lvl">Certeza: '+esc(d.certeza)+'</span></div>'+
+    (d.filas||[]).map(function(f){ var g=SG[f.v]||SG.na; return '<div class="orow"><div><b>'+esc(f.est)+'</b> <span class="sg '+g[0]+'">'+g[1]+'</span></div><span>'+esc(f.texto)+'</span></div>'; }).join("")+
+    '<p style="margin:6px 0 0"><b>Lectura:</b> '+esc(d.lectura||"")+'</p><p style="margin:4px 0 0;font-size:13px;color:var(--muted)">'+esc(d.motivo||"")+'</p></div>';
+  });
+  h+='<h2 class="sec" style="margin-top:18px">Vacíos de evidencia</h2>'+(a.vacios||[]).map(function(v,i){ return '<div class="gap"><b>'+(i+1)+'. '+esc(v.t)+'</b>'+esc(v.d)+'</div>'; }).join("");
+  h+='<h2 class="sec" style="margin-top:18px">Preguntas de investigación</h2>'+(a.preguntas||[]).map(function(q,i){
+    return '<div class="card" style="margin-bottom:10px"><h3>'+(i+1)+'. '+esc(q.t)+'</h3><div class="pico"><b>P</b><span>'+esc(q.p)+'</span><b>I</b><span>'+esc(q.i)+'</span><b>C</b><span>'+esc(q.c)+'</span><b>O</b><span>'+esc(q.o)+'</span></div>'+
+    '<div style="font-size:14px"><b>Diseño sugerido:</b> '+esc(q.diseno)+'</div><div style="font-size:13.5px;color:var(--muted)">'+esc(q.por)+'</div></div>';
+  }).join("");
+  h+='<h2 class="sec" style="margin-top:18px">Limitaciones de esta revisión</h2><ul style="padding-left:20px;margin:0">'+(a.limitaciones||[]).map(function(l){return '<li style="margin-bottom:6px">'+esc(l)+'</li>';}).join("")+'</ul>';
+  h+='<h2 class="sec" style="margin-top:18px">Referencias</h2><ol class="refs">'+(a.referencias||[]).map(function(r){return '<li>'+esc(r)+'</li>';}).join("")+'</ol>';
+  return h;
+}
+function renderAn(a){
+  var d=$("#detail"), scroll=d.scrollTop;
+  d.innerHTML='<div class="sheet"><div class="bar"><button class="btn" data-act="cerrar-an">← Volver</button><div class="row">'+(S.sample&&a.tema?'<button class="btn" data-act="generar-an" data-tema="'+esc(a.tema)+'">Actualizar</button>':'')+(S.drive?'<button class="btn" data-act="drive-an" data-id="'+esc(a.id)+'">PDF a Drive</button>':'')+(S.downloads&&window.jspdf?'<button class="btn" data-act="pdf-an" data-id="'+esc(a.id)+'">PDF</button>':'')+'<button class="btn primary" data-act="copiar-an" data-id="'+esc(a.id)+'">Copiar informe</button>'+(S.downloads?'<button class="btn" data-act="descargar-an" data-id="'+esc(a.id)+'">Descargar</button>':'')+'</div></div>'+
+  anBody(a)+'<div class="foot">Revisión express asistida por IA a partir de los artículos guardados; no es una revisión sistemática PRISMA. Verificar con los textos originales antes de citar.<br>Elaborado por '+esc(AUTORIA)+'</div></div>';
+  d.className="open"; d.scrollTop=scroll;
+}
+function anTexto(a){
+  var L=[], pq=a.pregunta||{};
+  L.push("REVISIÓN EXPRESS: "+a.titulo); L.push((a.fecha||"")+" · "+(a.tema||"")); L.push("");
+  L.push("MENSAJE CLAVE: "+(a.mensaje||"")); L.push("");
+  L.push("PREGUNTA: "+(pq.texto||"")); L.push("P: "+pq.p); L.push("I: "+pq.i); L.push("C: "+pq.c); L.push("O: "+pq.o); L.push(a.alcance||""); L.push("");
+  L.push("ESTUDIOS INCLUIDOS"); (a.incluidos||[]).forEach(function(i){ L.push("- "+i.corto+": "+i.diseno+", "+i.n+" ("+i.fuente+")"); }); L.push("");
+  L.push("EVIDENCIA POR DESENLACE (certeza: juicio cualitativo, no GRADE formal)");
+  (a.desenlaces||[]).forEach(function(d){ L.push(d.nombre+" · Certeza "+d.certeza); (d.filas||[]).forEach(function(f){ L.push("  - "+f.est+" ["+(SG[f.v]||SG.na)[1]+"]: "+f.texto); }); L.push("  Lectura: "+d.lectura); L.push(""); });
+  L.push("VACÍOS DE EVIDENCIA"); (a.vacios||[]).forEach(function(v,i){ L.push((i+1)+". "+v.t+": "+v.d); }); L.push("");
+  L.push("PREGUNTAS DE INVESTIGACIÓN"); (a.preguntas||[]).forEach(function(q,i){ L.push((i+1)+". "+q.t); L.push("   P: "+q.p+" | I: "+q.i+" | C: "+q.c+" | O: "+q.o); L.push("   Diseño: "+q.diseno); L.push("   Por qué: "+q.por); }); L.push("");
+  L.push("LIMITACIONES"); (a.limitaciones||[]).forEach(function(l){ L.push("- "+l); }); L.push("");
+  L.push("REFERENCIAS"); (a.referencias||[]).forEach(function(r,i){ L.push((i+1)+". "+r); }); L.push("");
+  L.push("Revisión express asistida por IA; no es una revisión PRISMA. Elaborado por "+AUTORIA);
+  return L.join("\n");
+}
+function anHTML(a){
+  var css='body{font-family:Arial,Helvetica,sans-serif;color:#16202e;max-width:720px;margin:0 auto;padding:20px 16px;line-height:1.5;background:#fff}h1{font-family:Georgia,serif;font-size:22px}h2{font-family:Georgia,serif;font-size:18px;margin-top:22px}.card{border:1px solid #dce1e8;border-radius:8px;padding:10px 12px;margin:10px 0}.msg{border-left:4px solid #a4243b;background:#f4f6f9;padding:10px 12px}.pico{display:grid;grid-template-columns:auto 1fr;gap:3px 10px}.sg{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:#e8ecf2}.f{font-size:12px;color:#586377;border-top:1px solid #dce1e8;margin-top:22px;padding-top:10px}.orow{padding:6px 0;border-top:1px solid #eef0f4}';
+  var body=anBody(a);
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+esc(a.titulo)+'</title><style>'+css+'</style></head><body>'+body+'<div class="f">Revisión express asistida por IA; no es una revisión sistemática PRISMA. Verificar con los textos originales antes de citar.<br>Elaborado por '+esc(AUTORIA)+'</div></body></html>';
+}
+
+
+/* ---------- carpetas por tema y análisis automático ---------- */
+function temaDe(a){ return a.tema||"Sin tema"; }
+function temasInfo(){
+  var m={};
+  S.items.forEach(function(a){ var t=temaDe(a); var e=(m[t]=m[t]||{g:0,c:0}); var st=a.estado||"candidato"; if(st==="guardado") e.g++; else if(st==="candidato") e.c++; });
+  S.bq.forEach(function(b){ var t=b.tema||"Sin tema"; m[t]=m[t]||{g:0,c:0}; });
+  S.an.forEach(function(a){ var t=a.tema||"Sin tema"; m[t]=m[t]||{g:0,c:0}; });
+  return m;
+}
+function analisisDe(t){ return S.an.filter(function(a){return (a.tema||"Sin tema")===t;})[0]; }
+function guardadosDe(t){ return S.items.filter(function(a){return (a.estado||"candidato")==="guardado" && temaDe(a)===t;}); }
+function carpetasHTML(){
+  var m=temasInfo(), keys=Object.keys(m).sort();
+  var h='<h2 class="sec">Carpetas por tema</h2>';
+  if(!keys.length) return h+'<div class="empty"><b>Aún no hay carpetas</b>Cada tema que uses al buscar o añadir artículos crea su carpeta aquí.</div>';
+  h+='<div class="list" style="margin-bottom:16px">'+keys.map(function(t){
+    var e=m[t], an=analisisDe(t);
+    return '<button class="card" style="text-align:left;cursor:pointer" data-act="carpeta" data-tema="'+esc(t)+'"><h3>'+esc(t)+'</h3><div class="chips"><span class="chip">'+e.g+' guardados</span><span class="chip">'+e.c+' candidatos</span>'+(an?'<span class="chip lvl">Análisis v'+(an.version||1)+'</span>':'<span class="chip src">Sin análisis</span>')+'</div></button>';
+  }).join("")+'</div><h2 class="sec">Todos los guardados</h2>';
+  return h;
+}
+function panelTema(t){
+  var an=analisisDe(t), ng=guardadosDe(t).length, g=S.gen||{}, busy=!!(g.busy&&g.tema===t);
+  var h='<div class="card" style="margin-bottom:12px"><div class="row" style="justify-content:space-between"><h3>'+esc(t)+'</h3><button class="btn quiet" data-act="carpetas-todas">← Carpetas</button></div>'+
+  '<div class="cite">'+ng+' guardados'+(an?(' · Análisis v'+(an.version||1)+' del '+esc(an.fecha||"")):' · sin análisis')+'</div>';
+  if(busy) h+='<p class="spin">Generando el análisis con Claude. Puede tardar uno o dos minutos. Caracteres recibidos: <span id="gen-chars">'+(g.chars||0)+'</span></p>';
+  if(g.err&&g.tema===t) h+='<p style="color:var(--accent);margin:0">'+esc(g.err)+'</p>';
+  if(!S.sample) h+='<p class="cite">El análisis automático no está disponible en esta vista; puedes pedirlo en el chat.</p>';
+  var ex=S.ex||{};
+  if(ex.tema===t&&(ex.busy||ex.msg||ex.err)) h+='<p class="spin" id="ex-msg" style="margin:0">'+esc(ex.msg||"")+'</p>'+(ex.err?'<p style="color:var(--accent);margin:0">'+esc(ex.err)+'</p>':'');
+  h+='<div class="row">'+(an?'<button class="btn" data-act="abrir-an" data-id="'+esc(an.id)+'">Abrir análisis</button>':'')+
+  (S.sample?'<button class="btn primary" data-act="generar-an" data-tema="'+esc(t)+'"'+((busy||ng<2)?' disabled':'')+'>'+(busy?'Generando…':(an?'Actualizar análisis':'Generar análisis'))+'</button>':'')+'</div>';
+  h+='<div class="row">'+(S.drive?'<button class="btn" data-act="exportar-tema" data-tema="'+esc(t)+'"'+((ex.busy||!ng)?' disabled':'')+'>Exportar carpeta a Drive (PDF)</button>':'')+(S.downloads?'<button class="btn quiet" data-act="pdf-busquedas" data-tema="'+esc(t)+'">PDF de búsquedas</button>':'')+'</div>';
+  if(ng<2) h+='<p class="cite" style="margin:0">Guarda al menos 2 artículos de este tema para poder analizarlos.</p>';
+  var bs=S.bq.filter(function(b){return (b.tema||"Sin tema")===t;}).sort(function(a,b){return String(b.fecha).localeCompare(String(a.fecha));}).slice(0,5);
+  if(bs.length) h+='<div style="font-size:13px;color:var(--muted)"><b>Búsquedas de esta carpeta</b>'+bs.map(function(b){return '<div>'+esc(b.fecha||"")+' · '+esc(b.pregunta||"")+'</div>';}).join("")+'</div>';
+  return h+'</div>';
+}
+function slugTema(t){ return String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)||"tema"; }
+function generarAnalisis(t){
+  if(!S.sample||!S.db){ toast("El análisis automático no está disponible en esta vista."); return; }
+  if(S.gen&&S.gen.busy){ toast("Ya hay un análisis en curso."); return; }
+  var arts=guardadosDe(t);
+  if(arts.length<2){ toast("Guarda al menos 2 artículos de este tema."); return; }
+  var prev=analisisDe(t);
+  S.gen={busy:true,tema:t,chars:0,err:""}; render();
+  var datos=arts.map(function(a){ return {id:a.id,cita:vancouver(a),titulo:a.titulo,diseno:DISENOS[a.diseno]||a.diseno,fuente:a.fuente||"abstract",resumen:a.resumen||{}}; });
+  var esquema='{"titulo":"","pregunta":{"texto":"","p":"","i":"","c":"","o":""},"alcance":"","incluidos":[{"id":"","corto":"Autor año","diseno":"","n":"","fuente":""}],"excluidos":[{"id":"","corto":"","motivo":""}],"desenlaces":[{"nombre":"","certeza":"Alta|Moderada|Moderada-baja|Baja|Muy baja","motivo":"","lectura":"","filas":[{"est":"Autor año","v":"+|=|-|na","texto":""}]}],"mensaje":"","vacios":[{"t":"","d":""}],"preguntas":[{"t":"","p":"","i":"","c":"","o":"","diseno":"","por":""}],"limitaciones":[""],"cambios":[""]}';
+  var prompt="Eres un metodólogo que redacta una revisión express (síntesis narrativa, no PRISMA) para un cardiólogo, a partir SOLO de los artículos guardados que recibes abajo. Tema: "+t+".\n\n"+
+  "REGLAS:\n- Usa únicamente las cifras y hechos de los artículos entregados; cópialas tal cual, con su IC. No agregues estudios, cifras ni conocimiento externo.\n"+
+  "- Si un estudio no reporta un desenlace, usa v 'na' y el texto 'No reportado en el resumen leído'.\n"+
+  "- v: '+' favorece con significancia a la intervención, '-' al comparador, '=' sin diferencia significativa o sin eventos.\n"+
+  "- Excluye (en 'excluidos', con motivo) los artículos que no responden la misma pregunta; los demás van en 'incluidos' con su 'id' exacto, diseño, tamaño y fuente (abstract, texto completo o congreso).\n"+
+  "- Baja la certeza cuando la fuente sea solo abstract o congreso, el desenlace sea subrogado, haya pocos eventos o intervalos amplios. La certeza es un juicio cualitativo, no GRADE formal.\n"+
+  "- Advierte si los metaanálisis y ensayos pueden solaparse.\n- Entre 3 y 6 desenlaces, 5 a 7 vacíos de evidencia (cada uno explica por qué importa), 4 a 6 preguntas PICO de investigación con diseño sugerido y justificación.\n"+
+  "- 'mensaje': dos frases claras para enseñar. Cada texto, máximo dos frases. Escribe en español.\n"+
+  (prev?"- Hay un análisis previo (abajo). Actualízalo incorporando los artículos nuevos; en 'cambios' lista brevemente qué cambió respecto a él. Si nada cambió, deja cambios vacío.\n":"- No hay análisis previo; deja 'cambios' como lista vacía.\n")+
+  "\nDevuelve SOLO un objeto JSON válido, sin markdown ni texto adicional, con exactamente esta forma:\n"+esquema+"\n\nARTÍCULOS GUARDADOS:\n"+JSON.stringify(datos)+
+  (prev?("\n\nANÁLISIS PREVIO:\n"+JSON.stringify({mensaje:prev.mensaje,desenlaces:prev.desenlaces,vacios:prev.vacios,preguntas:prev.preguntas})):"");
+  S.sample(prompt,{modelTier:"complex",onText:function(o){ var n=((o&&o.text)||"").length; S.gen.chars=n; var el=$("#gen-chars"); if(el) el.textContent=n; }}).then(function(r){
+    if(r&&r.truncated) throw {code:"truncated"};
+    var raw=(r&&r.text)||"", i=raw.indexOf("{"), j=raw.lastIndexOf("}");
+    var o=JSON.parse(raw.slice(i,j+1));
+    if(!Array.isArray(o.desenlaces)||!o.desenlaces.length||!Array.isArray(o.preguntas)||!Array.isArray(o.vacios)) throw {code:"formato"};
+    var inc=(o.incluidos||[]).map(function(x){ return {id:x.id,corto:x.corto||"",diseno:x.diseno||"",n:x.n||"",fuente:x.fuente||""}; });
+    var refs=inc.map(function(x){ var a=byId(x.id); return a?(vancouver(a)+((a.fuente||"").indexOf("congreso")>=0?" [sin artículo revisado por pares]":"")):null; }).filter(Boolean);
+    var lim=(o.limitaciones||[]).slice(); lim.push("Generado automáticamente con IA a partir de los resúmenes guardados; verificar con los textos originales antes de citar.");
+    var ver=((prev&&prev.version)||0)+1, id=prev?prev.id:slugTema(t);
+    var nuevo=JSON.parse(JSON.stringify({titulo:o.titulo||("Análisis: "+t),tema:t,fecha:new Date().toISOString().slice(0,10),tipo:"Revisión express: síntesis narrativa de los artículos guardados",version:ver,articulos:arts.map(function(a){return a.id;}),pregunta:o.pregunta||{},alcance:o.alcance||"",incluidos:inc,excluidos:o.excluidos||[],desenlaces:o.desenlaces,mensaje:o.mensaje||"",vacios:o.vacios,preguntas:o.preguntas,limitaciones:lim,cambios:o.cambios||[],referencias:refs,generadoPor:"app"}));
+    var paso=Promise.resolve();
+    if(prev){ var old=JSON.parse(JSON.stringify(prev)); delete old.id; paso=Promise.resolve(S.db.collection("analisis_hist").doc(prev.id+"_v"+(prev.version||1)).set(old)); }
+    return paso.then(function(){ return S.db.collection("analisis").doc(id).set(nuevo); }).then(function(){ var cp=JSON.parse(JSON.stringify(nuevo)); cp.id=id; S.an=S.an.filter(function(x){return x.id!==id;}).concat([cp]); S.gen={busy:false}; S.anOpen=id; render(); toast("Análisis guardado en la carpeta"); });
+  }).catch(function(e){
+    var c=(e&&e.code)||"";
+    S.gen={busy:false,tema:t,err: c==="not_granted"?permMsg(): c==="rate_limited"?"Demasiadas solicitudes seguidas. Espera un momento.": c==="truncated"?"La respuesta se cortó. Inténtalo de nuevo.": (c==="formato"||e instanceof SyntaxError)?"Claude devolvió un formato inesperado. Inténtalo de nuevo.":"No se pudo generar el análisis ("+errText(e)+")."};
+    render();
+  });
+}
+
+/* ---------- filtrado ---------- */
+function relevanciaOf(a){ return a.relevancia||0; }
+function filtered(status){
+  var f=S.f, q=f.q.trim().toLowerCase();
+  var r=S.items.filter(function(a){
+    if((a.estado||"candidato")!==status) return false;
+    if(f.tema && temaDe(a)!==f.tema) return false;
+    if(f.diseno && a.diseno!==f.diseno) return false;
+    if(q){
+      var hay=[a.titulo,a.tema,(a.etiquetas||[]).join(" "),a.revista,(a.autores||[]).join(" "),sumField(a,"resultado")].join(" ").toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+  r.sort(function(a,b){
+    if(f.orden==="anio") return (b.anio||0)-(a.anio||0);
+    if(f.orden==="evidencia"){ var o=["rs","eca","cohorte","guia","revision","otro"]; return o.indexOf(a.diseno)-o.indexOf(b.diseno); }
+    return (relevanciaOf(b)-relevanciaOf(a)) || ((b.anio||0)-(a.anio||0));
+  });
+  return r;
+}
+
+/* ---------- vistas ---------- */
+function counts(){
+  var c=0,b=0; S.items.forEach(function(a){ var e=a.estado||"candidato"; if(e==="candidato") c++; else if(e==="guardado") b++; });
+  $("#n-cand").textContent=c; $("#n-bib").textContent=b;
+}
+function render(){
+  counts();
+  Array.prototype.forEach.call(document.querySelectorAll("#tabs button"),function(b){ b.setAttribute("aria-selected", b.dataset.tab===S.tab?"true":"false"); });
+  var m=$("#main");
+  var bn=banner();
+  if(S.tab==="buscar") m.innerHTML=bn+viewBuscar();
+  else if(S.tab==="anadir") m.innerHTML=bn+viewAnadir();
+  else if(S.tab==="analisis") m.innerHTML=bn+viewAnalisisLista();
+  else m.innerHTML=bn+viewLista();
+  if(S.tab==="candidatos"||S.tab==="biblioteca") fillList();
+  renderDetail();
+}
+function refresh(){
+  counts();
+  if(S.tab==="candidatos"||S.tab==="biblioteca"){ updateTemaOptions(); fillList(); }
+  renderDetail();
+}
+function viewBuscar(){
+  var nCand=S.items.filter(function(a){return (a.estado||"candidato")==="candidato";}).length, b=S.bu;
+  var anio=new Date().getFullYear(), canApp=!!(S.mcp&&S.db);
+  function opt(v,l,sel){ return '<option value="'+esc(v)+'"'+(sel===v?' selected':'')+'>'+l+'</option>'; }
+  var h='<h2 class="sec">Nueva búsqueda</h2>'+
+  '<p style="margin:0 0 12px;color:var(--muted)">'+(canApp?'Escribe la pregunta clínica. La app la convierte en una búsqueda de PubMed, lee los abstracts y deja los artículos como candidatos, con su resumen estructurado.':'Escribe la pregunta con tus palabras o con términos MeSH. Copia la solicitud, pégala en el chat con Claude y los artículos encontrados aparecen aquí como candidatos.')+'</p>'+
+  '<div class="field"><label for="q-tema">Pregunta o términos MeSH</label><span style="font-size:12.5px;color:var(--muted)">Para dictar, toca el micrófono del teclado de tu celular.</span><textarea id="q-tema" lang="es" autocapitalize="sentences" spellcheck="true" enterkeyhint="done" style="min-height:92px" placeholder="Ej.: ¿ACOD o warfarina en trombo del ventrículo izquierdo?">'+esc(b.q)+'</textarea></div>'+
+  '<div class="field"><label for="q-carpeta">Carpeta (tema)</label><input id="q-carpeta" list="dl-temas" value="'+esc(b.carp)+'" placeholder="Ej.: ACOD en trombo ventricular"><datalist id="dl-temas">'+Object.keys(temasInfo()).map(function(t){return '<option value="'+esc(t)+'">';}).join("")+'</datalist></div>'+
+  '<div class="field"><label for="q-tipo">Tipo de evidencia</label><select id="q-tipo">'+opt("","Todos los diseños",b.tipo)+opt("metaanálisis y revisiones sistemáticas","Metaanálisis y revisiones sistemáticas",b.tipo)+opt("ensayos clínicos aleatorizados","Ensayos clínicos aleatorizados",b.tipo)+opt("guías de práctica clínica","Guías de práctica clínica",b.tipo)+opt("estudios de cohorte","Estudios de cohorte",b.tipo)+'</select></div>'+
+  (canApp?'<div class="field"><label for="q-desde">Publicados</label><select id="q-desde">'+opt("","En cualquier fecha",b.desde)+opt(String(anio-5),"Últimos 5 años",b.desde)+opt(String(anio-10),"Últimos 10 años",b.desde)+'</select></div>':'')+
+  '<div class="row">'+(canApp?'<button class="btn primary" data-act="buscar-pubmed"'+(b.busy?' disabled':'')+'>'+(b.busy?'Buscando…':'Buscar en PubMed')+'</button>':'')+'<button class="btn'+(canApp?'':' primary')+'" data-act="copiar-solicitud">Copiar solicitud para el chat</button></div>'+
+  '<p class="spin" id="bu-msg" style="margin:8px 0 0">'+esc(b.msg||"")+'</p><span class="spin" id="copy-note"></span>'+
+  (b.err?'<p style="color:var(--accent);margin:6px 0 0">'+esc(b.err)+'</p>':'')+
+  (b.estr?'<div class="note" style="margin-top:10px"><b>Consulta enviada a PubMed</b><br><span style="word-break:break-word">'+esc(b.estr)+'</span></div>':'')+
+  '<div class="note" style="margin-top:16px">'+(nCand?('Tienes <b>'+nCand+'</b> candidato'+(nCand===1?'':'s')+' esperando revisión.'):'Aún no hay candidatos pendientes.')+' Los resúmenes parten del abstract; cuando se lee el texto completo, la ficha lo indica. Datos bibliográficos: PubMed (NCBI).</div>'+
+  '<details style="margin-top:14px"'+(SA&&!SA.getKey()?' open':'')+'><summary style="color:var(--muted);font-size:13px;cursor:pointer">Ajustes y copia de seguridad</summary><div style="margin-top:8px">'+ajustesHTML()+'</div></details>'+
+  '<details style="margin-top:10px"><summary style="color:var(--muted);font-size:13px;cursor:pointer">Estado de conexiones</summary><div class="row" style="margin-top:8px"><button class="btn" data-act="probar-conexiones">Probar conexiones</button></div><pre id="diag-out" style="white-space:pre-wrap;font-size:12px;color:var(--muted);margin:8px 0 0"></pre></details>';
+  return h;
+}
+function viewLista(){
+  var pre="";
+  if(S.tab==="biblioteca"){ pre = S.f.tema ? panelTema(S.f.tema) : carpetasHTML(); }
+  var st = S.tab==="candidatos"?"candidato":"guardado";
+  var temas={}; S.items.forEach(function(a){ if((a.estado||"candidato")===st && a.tema) temas[a.tema]=1; });
+  var opts='<option value="">Todos los temas</option>'+Object.keys(temas).sort().map(function(t){ return '<option'+(S.f.tema===t?' selected':'')+'>'+esc(t)+'</option>'; }).join("");
+  var dis='<option value="">Todos los diseños</option>'+Object.keys(DISENOS).map(function(k){ return '<option value="'+k+'"'+(S.f.diseno===k?' selected':'')+'>'+esc(DISENOS[k])+'</option>'; }).join("");
+  var ord=[["relevancia","Por relevancia"],["anio","Por año"],["evidencia","Por nivel de evidencia"]].map(function(o){ return '<option value="'+o[0]+'"'+(S.f.orden===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join("");
+  return pre+'<div class="tools"><input type="search" id="f-q" placeholder="Buscar en esta lista" value="'+esc(S.f.q)+'" aria-label="Buscar en esta lista">'+
+  '<select id="f-tema" aria-label="Tema">'+opts+'</select><select id="f-diseno" aria-label="Diseño">'+dis+'</select>'+
+  '<select id="f-orden" aria-label="Orden" style="grid-column:1/-1">'+ord+'</select></div>'+
+  (S.slow&&!S.loaded?'<p class="spin">Aún no se puede alcanzar la biblioteca. Los datos pueden no estar al día.</p>':'')+
+  '<div class="list" id="list"></div>';
+}
+function updateTemaOptions(){
+  var sel=$("#f-tema"); if(!sel) return;
+  var st = S.tab==="candidatos"?"candidato":"guardado";
+  var temas={}; S.items.forEach(function(a){ if((a.estado||"candidato")===st && a.tema) temas[a.tema]=1; });
+  sel.innerHTML='<option value="">Todos los temas</option>'+Object.keys(temas).sort().map(function(t){ return '<option'+(S.f.tema===t?' selected':'')+'>'+esc(t)+'</option>'; }).join("");
+}
+function stars(a,interactive){
+  var n=relevanciaOf(a), h="";
+  for(var i=1;i<=5;i++){
+    h+= interactive ? '<button class="'+(i<=n?'on':'')+'" data-act="rel" data-id="'+esc(a.id)+'" data-n="'+i+'" aria-label="Relevancia '+i+' de 5">★</button>'
+                    : '<span style="color:'+(i<=n?'var(--accent)':'var(--line)')+'">★</span>';
+  }
+  return '<span class="stars" role="group" aria-label="Relevancia">'+h+'</span>';
+}
+function card(a){
+  var cand=(a.estado||"candidato")==="candidato";
+  return '<article class="card"><h3>'+esc(a.titulo)+'</h3><div class="cite">'+esc(shortCite(a))+'</div>'+
+  '<div class="chips"><span class="chip lvl">'+esc(NIVEL[a.diseno]||"—")+'</span><span class="chip">'+esc(DISENOS[a.diseno]||"Otro")+'</span>'+(a.tema?'<span class="chip">'+esc(a.tema)+'</span>':'')+'<span class="chip src">'+esc(a.fuente||"abstract")+'</span></div>'+
+  '<div class="res">'+esc(sumField(a,"resultado"))+'</div>'+
+  '<div class="row" style="justify-content:space-between">'+stars(a,true)+'</div>'+
+  '<div class="row"><button class="btn" data-act="abrir" data-id="'+esc(a.id)+'">Ver ficha</button>'+
+  (cand?'<button class="btn primary" data-act="guardar" data-id="'+esc(a.id)+'">Guardar</button><button class="btn quiet" data-act="descartar" data-id="'+esc(a.id)+'">Descartar</button>':'<button class="btn quiet" data-act="devolver" data-id="'+esc(a.id)+'">Quitar de biblioteca</button>')+
+  '</div></article>';
+}
+function fillList(){
+  var el=$("#list"); if(!el) return;
+  var st = S.tab==="candidatos"?"candidato":"guardado";
+  var rows=filtered(st);
+  if(!S.loaded && !S.items.length){ el.innerHTML='<p class="spin">Cargando la biblioteca…</p>'; return; }
+  if(!rows.length){
+    el.innerHTML = S.items.length && (S.f.q||S.f.tema||S.f.diseno)
+      ? '<div class="empty"><b>Sin coincidencias</b>Cambia o quita los filtros.</div>'
+      : (st==="candidato"
+        ? '<div class="empty"><b>No hay candidatos</b>Pide una búsqueda en el chat o añade un artículo pegando su abstract.</div>'
+        : '<div class="empty"><b>La biblioteca está vacía</b>Guarda artículos desde Candidatos para verlos aquí, por tema, año o relevancia.</div>');
+    return;
+  }
+  el.innerHTML=rows.map(card).join("");
+}
+function viewAnadir(){
+  var p=S.add.preview;
+  var h='<h2 class="sec">Añadir un artículo</h2><p style="margin:0 0 12px;color:var(--muted)">Pega el abstract con su cita (título, autores, revista, año, DOI o PMID si los tienes). Claude lo estructura usando solo lo que pegaste.</p>';
+  if(!S.sample){ return h+'<div class="note">Esta función no está disponible en esta vista. Puedes pedirle a Claude en el chat que agregue el artículo.</div>'; }
+  h+='<div class="field"><label for="a-text">Abstract y datos de la cita</label><textarea id="a-text" lang="es" placeholder="Pega aquí el texto del artículo…"></textarea></div>'+
+  '<div class="field"><label for="a-tema">Tema</label><input id="a-tema" placeholder="Ej.: Anticoagulación y ERC"></div>'+
+  '<div class="row"><button class="btn primary" data-act="estructurar"'+(S.add.busy?' disabled':'')+'>'+(S.add.busy?'Estructurando…':'Estructurar resumen')+'</button></div>';
+  if(S.add.err) h+='<p style="color:var(--accent);margin-top:10px">'+esc(S.add.err)+'</p>';
+  if(p){ h+='<h2 class="sec" style="margin-top:20px">Vista previa</h2><div class="list">'+card(Object.assign({id:"preview"},p))+'</div><div class="row" style="margin-top:10px"><button class="btn primary" data-act="añadir-preview">Añadir a candidatos</button></div>'; }
+  return h;
+}
+
+/* ---------- ficha a pantalla completa ---------- */
+function renderDetail(){
+  var d=$("#detail");
+  if(S.anOpen){ var an=S.an.filter(function(x){return x.id===S.anOpen;})[0]; if(an){ renderAn(an); return; } S.anOpen=null; }
+  if(!S.openId){ d.className=""; d.innerHTML=""; return; }
+  var a=S.items.filter(function(x){return x.id===S.openId;})[0];
+  if(!a){ S.openId=null; d.className=""; d.innerHTML=""; return; }
+  var scroll=d.scrollTop;
+  var cand=(a.estado||"candidato")==="candidato";
+  var rows=[["pregunta","Pregunta"],["poblacion","Población"],["intervencion","Intervención / exposición"],["comparador","Comparador"],["resultado","Resultado clave"],["limitaciones","Limitaciones"],["docencia","Mensaje para enseñar"]];
+  var dl=rows.map(function(p){ var v=sumField(a,p[0]); return v?('<dt>'+p[1]+'</dt><dd>'+esc(v)+'</dd>'):""; }).join("");
+  d.innerHTML='<div class="sheet"><div class="bar"><button class="btn" data-act="cerrar">← Volver</button>'+
+  '<div class="row">'+(cand?'<button class="btn primary" data-act="guardar" data-id="'+esc(a.id)+'">Guardar</button>':'')+'</div></div>'+
+  '<h2>'+esc(a.titulo)+'</h2>'+
+  '<div class="chips"><span class="chip lvl">'+esc(NIVEL[a.diseno]||"—")+'</span><span class="chip">'+esc(DISENOS[a.diseno]||"Otro")+'</span>'+(a.tema?'<span class="chip">'+esc(a.tema)+'</span>':'')+'<span class="chip src">Resumen desde '+esc(a.fuente||"abstract")+'</span></div>'+
+  '<div class="vanc">'+esc(vancouver(a))+'</div>'+
+  '<div class="row"><span style="font-size:13px;color:var(--muted)">Relevancia</span>'+stars(a,true)+'</div>'+
+  '<div class="diag">'+diagramaSVG(a)+'</div>'+
+  '<dl class="fields">'+dl+'</dl>'+
+  (a.url?'<p><a href="'+esc(a.url)+'" target="_blank" rel="noopener">Abrir el artículo original</a></p>':'')+
+  '<div class="field"><label for="d-tema">Tema (para organizar la biblioteca)</label><input id="d-tema" data-id="'+esc(a.id)+'" value="'+esc(a.tema||"")+'"></div>'+
+  '<div class="row"><button class="btn primary" data-act="copiar-ficha" data-id="'+esc(a.id)+'">Copiar ficha</button>'+
+  (S.downloads?'<button class="btn" data-act="descargar" data-id="'+esc(a.id)+'">Descargar ficha (.html)</button>':'')+'</div>'+
+  '<div class="row">'+(S.downloads&&window.jspdf?'<button class="btn" data-act="pdf-ficha" data-id="'+esc(a.id)+'">Descargar PDF</button>':'')+(S.drive?'<button class="btn primary" data-act="drive-ficha" data-id="'+esc(a.id)+'">PDF a Drive</button>':'')+(a.driveId?'<span class="spin">Ya está en Drive</span>':'')+'</div>'+
+  '<div class="foot">Resumen elaborado con IA a partir del '+esc(a.fuente||"abstract")+'; verificar con el texto original antes de citar.<br>Elaborado por '+esc(AUTORIA)+'</div></div>';
+  d.className="open"; d.scrollTop=scroll;
+}
+
+/* ---------- eventos ---------- */
+function copyText(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text).then(function(){return true;},function(){return fallbackCopy(text);});
+    }
+  }catch(e){}
+  return Promise.resolve(fallbackCopy(text));
+}
+function fallbackCopy(text){
+  try{
+    var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select(); var ok=document.execCommand("copy"); document.body.removeChild(ta); return ok;
+  }catch(e){ return false; }
+}
+function byId(id){ return S.items.filter(function(x){return x.id===id;})[0]; }
+
+document.addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-act],#tabs button"); if(!t) return;
+  if(t.dataset.tab){ S.tab=t.dataset.tab; S.f={q:"",tema:"",diseno:"",orden:"relevancia"}; render(); $("#main").scrollTop=0; return; }
+  var act=t.dataset.act, id=t.dataset.id;
+  if(act==="abrir"){ S.openId=id; renderDetail(); $("#detail").scrollTop=0; }
+  else if(act==="cerrar"){ S.openId=null; renderDetail(); }
+  else if(act==="carpeta"){ S.f={q:"",tema:t.dataset.tema,diseno:"",orden:"relevancia"}; render(); $("#main").scrollTop=0; }
+  else if(act==="carpetas-todas"){ S.f={q:"",tema:"",diseno:"",orden:"relevancia"}; render(); }
+  else if(act==="generar-an"){ var tm=t.dataset.tema; S.anOpen=null; S.tab="biblioteca"; S.f={q:"",tema:tm,diseno:"",orden:"relevancia"}; renderDetail(); generarAnalisis(tm); }
+  else if(act==="abrir-an"){ S.anOpen=id; renderDetail(); $("#detail").scrollTop=0; }
+  else if(act==="cerrar-an"){ S.anOpen=null; renderDetail(); }
+  else if(act==="copiar-an"){ var an1=S.an.filter(function(x){return x.id===id;})[0]; if(an1) copyText(anTexto(an1)).then(function(ok){ toast(ok?"Informe copiado":"No se pudo copiar."); }); }
+  else if(act==="descargar-an"){ var an2=S.an.filter(function(x){return x.id===id;})[0]; if(an2&&S.downloads){ S.downloads.save({filename:"Revision_express_"+(an2.fecha||"")+".html",data:anHTML(an2)}).then(function(){toast("Informe listo");},function(e){ if(!e||e.code!=="declined") toast("No se pudo generar la descarga."); }); } }
+  else if(act==="guardar"){ var ga=byId(id); save(id,{estado:"guardado",relevancia:relevanciaOf(ga||{})||3}); toast("Guardado en la biblioteca"); }
+  else if(act==="descartar"){ save(id,{estado:"descartado"}); toast("Descartado"); }
+  else if(act==="devolver"){ save(id,{estado:"candidato"}); toast("Devuelto a candidatos"); }
+  else if(act==="rel"){ save(id,{relevancia:Number(t.dataset.n)}); }
+  else if(act==="copiar-ficha"){ var a=byId(id); if(a) copyText(fichaTexto(a)).then(function(ok){ toast(ok?"Ficha copiada":"No se pudo copiar; selecciona el texto manualmente."); }); }
+  else if(act==="descargar"){ var b=byId(id); if(b&&S.downloads){ var nm=((b.autores&&b.autores[0]||"ficha").split(" ")[0]+"_"+(b.anio||"")).replace(/[^\w\-]+/g,"_"); S.downloads.save({filename:"Ficha_"+nm+".html",data:fichaHTML(b)}).then(function(){toast("Ficha lista");},function(e){ if(!e||e.code!=="declined") toast("No se pudo generar la descarga."); }); } }
+  else if(act==="copiar-solicitud"){
+    var q=($("#q-tema").value||"").trim(), tp=$("#q-tipo").value, carp=($("#q-carpeta").value||"").trim();
+    if(!q){ $("#copy-note").textContent="Escribe primero la pregunta."; return; }
+    if(S.db){ try{ S.db.collection("busquedas").add({pregunta:q,tipo:tp||"",tema:carp||"Sin tema",fecha:new Date().toISOString().slice(0,10)}); }catch(e){} }
+    var msg="Busca en PubMed y en la web artículos sobre: "+q+(tp?(". Prioriza "+tp+"."):".")+(carp?(" Guarda los candidatos con el tema «"+carp+"»."):"")+
+      " Revisa los abstracts, prepara para cada uno el resumen estructurado (pregunta, población, intervención/exposición, comparador, resultado clave, limitaciones, mensaje para enseñar) y agrégalos como candidatos a mi Biblioteca Clínica. Cita solo lo que lees y marca si la fuente es abstract o texto completo.";
+    copyText(msg).then(function(ok){ $("#copy-note").textContent= ok?"Solicitud copiada. Pégala en el chat.":"No se pudo copiar."; });
+  }
+  else if(act==="estructurar"){ estructurar(); }
+  else if(act==="buscar-pubmed"){ buscarPubmed(); }
+  else if(act==="exportar-tema"){ exportarTema(t.dataset.tema); }
+  else if(act==="pdf-busquedas"){ descargarPdf("busquedas",t.dataset.tema); }
+  else if(act==="pdf-ficha"){ var fa=byId(id); if(fa) descargarPdf("ficha",fa); }
+  else if(act==="drive-ficha"){ var fb=byId(id); if(fb) enDrive("ficha",fb,temaDe(fb)); }
+  else if(act==="pdf-an"){ var pa=S.an.filter(function(x){return x.id===id;})[0]; if(pa) descargarPdf("analisis",pa); }
+  else if(act==="drive-an"){ var pb=S.an.filter(function(x){return x.id===id;})[0]; if(pb) enDrive("analisis",pb,pb.tema||"Sin tema").then(function(){ S.db.collection("analisis").doc(pb.id).update({driveVersion:pb.version||1}); }); }
+  else if(act==="probar-conexiones"){ probarConexiones(); }
+  else if(act==="bk-export"){ bkExport(); }
+  else if(act==="clave-guardar"){ var kv=($("#s-key").value||"").trim(); if(SA&&kv){ SA.setKey(kv); toast("Clave guardada"); render(); } else toast("Escribe la clave primero."); }
+  else if(act==="clave-borrar"){ if(SA){ SA.setKey(""); toast("Clave borrada"); render(); } }
+  else if(act==="modelo-guardar"){ var mv=($("#s-model").value||"").trim(); if(SA&&mv){ SA.setModel(mv); toast("Modelo guardado"); } }
+  else if(act==="añadir-preview"){ anadirPreview(); }
+});
+document.addEventListener("input",function(ev){
+  var t=ev.target;
+  if(t.id==="f-q"){ S.f.q=t.value; fillList(); }
+  else if(t.id==="q-tema"){ S.bu.q=t.value; }
+  else if(t.id==="q-carpeta"){ S.bu.carp=t.value; }
+});
+document.addEventListener("change",function(ev){
+  var t=ev.target;
+  if(t.id==="f-tema"){ S.f.tema=t.value; fillList(); }
+  else if(t.id==="q-tipo"){ S.bu.tipo=t.value; }
+  else if(t.id==="q-desde"){ S.bu.desde=t.value; }
+  else if(t.id==="bk-file"){ bkImport(t.files&&t.files[0]); }
+  else if(t.id==="q-carpeta"){ S.bu.carp=t.value; }
+  else if(t.id==="f-diseno"){ S.f.diseno=t.value; fillList(); }
+  else if(t.id==="f-orden"){ S.f.orden=t.value; fillList(); }
+  else if(t.id==="d-tema"){ save(t.dataset.id,{tema:t.value.trim()}); }
+});
+
+/* ---------- añadir con IA ---------- */
+function estructurar(){
+  var text=($("#a-text").value||"").trim(), tema=($("#a-tema").value||"").trim();
+  if(text.length<80){ S.add.err="Pega un abstract más completo (al menos unas líneas)."; render(); return; }
+  S.add.busy=true; S.add.err=""; S.add.preview=null; render();
+  var prompt="Eres un asistente de literatura médica. A partir SOLO del texto entregado, devuelve un objeto JSON válido, sin texto adicional ni markdown, con estas claves: "+
+  "titulo, autores (arreglo de strings en formato Vancouver 'Apellido Iniciales'), autoresCompletos (true solo si la lista de autores está completa), revista, anio (número), volumen, paginas, doi, pmid, "+
+  "diseno (uno de: rs, eca, cohorte, guia, revision, otro), "+
+  "resumen (objeto con: pregunta, poblacion, intervencion, comparador, resultado, limitaciones, docencia). "+
+  "Reglas: no inventes datos; si algo no aparece en el texto usa null (o cadena vacía en resumen). Copia las cifras exactamente como están en el texto. "+
+  "En 'docencia' escribe un mensaje de una frase para enseñar, que se desprenda solo de lo reportado. En español.\n\nTEXTO:\n"+text;
+  S.sample(prompt).then(function(r){
+    var raw=(r&&r.text)||""; var i=raw.indexOf("{"), j=raw.lastIndexOf("}");
+    var o=JSON.parse(raw.slice(i,j+1));
+    if(!o.titulo) throw new Error("sin título");
+    var ok=Object.keys(DISENOS); if(ok.indexOf(o.diseno)<0) o.diseno="otro";
+    o.tema=tema||""; o.fuente="abstract pegado"; o.estado="candidato"; o.relevancia=0;
+    if(o.doi) o.url="https://doi.org/"+o.doi; else if(o.pmid) o.url="https://pubmed.ncbi.nlm.nih.gov/"+o.pmid+"/";
+    Object.keys(o).forEach(function(k){ if(o[k]===null) delete o[k]; });
+    S.add.preview=o; S.add.busy=false; render();
+  }).catch(function(e){
+    S.add.busy=false;
+    S.add.err = (e&&e.code==="not_granted") ? permMsg() : (e&&e.code==="rate_limited") ? "Demasiadas solicitudes seguidas. Espera un momento." : "No se pudo estructurar el texto. Revisa que incluya el abstract completo e inténtalo de nuevo.";
+    render();
+  });
+}
+function anadirPreview(){
+  var p=S.add.preview; if(!p||!S.db) { toast("No se puede guardar en esta vista."); return; }
+  p.creado=new Date().toISOString().slice(0,10);
+  S.db.collection("articles").add(p).then(function(){ S.add.preview=null; S.tab="candidatos"; render(); toast("Añadido a candidatos"); },function(){ toast("No se pudo añadir el artículo."); });
+}
+
+
+/* ---------- v10: ajustes y copia de seguridad ---------- */
+function ajustesHTML(){
+  var h='';
+  if(SA){
+    h+='<div class="field"><label for="s-key">Clave de API de Anthropic</label><span style="font-size:12.5px;color:var(--muted)">'+(SA.getKey()?'Clave guardada en este teléfono.':'Aún no hay clave: se necesita para resúmenes y análisis.')+' Se guarda solo en este navegador.</span><input id="s-key" type="password" autocomplete="off" placeholder="sk-ant-..."></div>'+
+    '<div class="row"><button class="btn primary" data-act="clave-guardar">Guardar clave</button>'+(SA.getKey()?'<button class="btn quiet" data-act="clave-borrar">Borrar clave</button>':'')+'</div>'+
+    '<div class="field"><label for="s-model">Modelo de Claude</label><input id="s-model" value="'+esc(SA.getModel())+'"></div>'+
+    '<div class="row"><button class="btn" data-act="modelo-guardar">Guardar modelo</button></div>';
+  }
+  h+='<p style="font-size:13px;color:var(--muted);margin:14px 0 6px"><b>Copia de seguridad</b><br>Guarda toda tu biblioteca en un archivo, o recupérala desde uno.</p>'+
+  '<div class="row"><button class="btn" data-act="bk-export">Descargar copia (.json)</button></div>'+
+  '<div class="field"><label for="bk-file">Importar copia</label><input type="file" id="bk-file" accept=".json,application/json"></div>'+
+  '<p class="spin" id="bk-msg"></p>';
+  return h;
+}
+function bkExport(){
+  if(!S.downloads){ toast("La descarga no está disponible en esta vista."); return; }
+  var data={tipo:"biblioteca-clinica",version:1,exportado:new Date().toISOString(),articles:S.items,analisis:S.an,busquedas:S.bq};
+  S.downloads.save({filename:"Biblioteca_Clinica_copia_"+new Date().toISOString().slice(0,10)+".json",data:JSON.stringify(data,null,1)}).then(function(){ toast("Copia lista"); },function(e){ if(!e||e.code!=="declined") toast("No se pudo generar la copia."); });
+}
+function bkImport(file){
+  var el=$("#bk-msg"); function m(t){ if(el) el.textContent=t; }
+  if(!file||!S.db){ m("No se puede importar en esta vista."); return; }
+  var rd=new FileReader();
+  rd.onload=function(){
+    var d; try{ d=JSON.parse(rd.result); }catch(e){ m("El archivo no es una copia válida."); return; }
+    if(!d||d.tipo!=="biblioteca-clinica"){ m("El archivo no es una copia de la Biblioteca Clínica."); return; }
+    var cols=[["articles",d.articles],["analisis",d.analisis],["busquedas",d.busquedas]], jobs=[], n={articles:0,analisis:0,busquedas:0};
+    cols.forEach(function(c){ (c[1]||[]).forEach(function(row){
+      if(!row||!row.id) return; var o=JSON.parse(JSON.stringify(row)); var id=o.id; delete o.id;
+      jobs.push(function(){ return Promise.resolve(S.db.collection(c[0]).doc(id).set(o)).then(function(){ n[c[0]]++; }); });
+    }); });
+    m("Importando "+jobs.length+" elementos…");
+    var i=0; (function next(){ if(i>=jobs.length){ m("Listo: "+n.articles+" artículos, "+n.analisis+" análisis y "+n.busquedas+" búsquedas importados."); toast("Copia importada"); return; } var j=jobs[i++]; j().then(next,function(){ m("Falló la importación en el elemento "+i+"."); }); })();
+  };
+  rd.readAsText(file);
+}
+
+/* ---------- v9: conexiones (PubMed, Drive) ---------- */
+var PM="PubMed", DR="Google Drive", RAIZ="Biblioteca Clínica";
+function unwrap(res){
+  var p=(res&&res.payload!==undefined)?res.payload:res;
+  if(p&&p.structuredContent) p=p.structuredContent;
+  if(p&&Array.isArray(p.content)){
+    var tx=p.content.map(function(c){return (c&&c.text)||"";}).join("");
+    try{ return JSON.parse(tx); }catch(e){ return tx; }
+  }
+  if(typeof p==="string"){ try{ return JSON.parse(p); }catch(e){ return p; } }
+  return p;
+}
+function callMcp(server,tool,input){
+  var m=S.mcp; if(!m) return Promise.reject({code:"no_mcp"});
+  function viaServer(){ return Promise.resolve(m.server(server)).then(function(s){ if(!s||typeof s[tool]!=="function") throw {code:"no_tool",message:"herramienta no disponible: "+tool}; return s[tool](input); }); }
+  function viaCall(){ return Promise.resolve(m.callTool(server,tool,input)); }
+  var first=(typeof m.server==="function")?viaServer:viaCall;
+  return first().catch(function(e){
+    if(typeof m.callTool==="function" && (!e || e.code==="no_tool" || e instanceof TypeError)) return viaCall();
+    throw e;
+  }).then(unwrap);
+}
+function permMsg(){ return SA?"Falta la clave de API de Claude. Ponla en Buscar > Ajustes y copia de seguridad.":"No se concedió el permiso para usar Claude desde esta página."; }
+function mcpErr(e){
+  var c=(e&&e.code)||"";
+  if(c==="sin_resultados") return "PubMed no devolvió resultados para esa estrategia. Prueba con otros términos.";
+  if(c==="todos_repetidos") return "Todos los resultados ya estaban en tu biblioteca.";
+  if(c==="no_mcp") return "Esta vista no tiene acceso a los conectores.";
+  if(c==="nopdf") return "No se pudo cargar el generador de PDF (revisa tu conexión a internet).";
+  if(c==="not_granted"&&SA) return permMsg();
+  if(c==="not_granted"||c==="authz_denied"||c==="consent_declined") return "No se concedió el permiso para usar el conector.";
+  if(c==="server_not_connected") return "El conector no está conectado en tu cuenta de Claude.";
+  if(c==="rate_limited") return "Demasiadas solicitudes seguidas. Espera un momento.";
+  return "No se pudo completar ("+errText(e)+").";
+}
+
+/* ---------- v9: búsqueda en PubMed dentro de la app ---------- */
+function tipoFiltro(tipo){
+  if(!tipo) return "";
+  if(/metaan|sistem/i.test(tipo)) return "(Meta-Analysis[Publication Type] OR Systematic Review[Publication Type])";
+  if(/aleator/i.test(tipo)) return "Randomized Controlled Trial[Publication Type]";
+  if(/gu[ií]as/i.test(tipo)) return "(Practice Guideline[Publication Type] OR Guideline[Publication Type])";
+  if(/cohorte/i.test(tipo)) return "Cohort Studies[MeSH Terms]";
+  return "";
+}
+function estrategiaPubmed(q,tipo){
+  var filtro=tipoFiltro(tipo);
+  function fin(base){ return filtro?("("+base+") AND "+filtro):base; }
+  if(/\[(mesh|title|author|tiab|pt|publication type|title\/abstract)/i.test(q) || !S.sample) return Promise.resolve(fin(q));
+  var prompt="Convierte esta pregunta clínica en una consulta de búsqueda de PubMed en inglés: usa términos MeSH con [MeSH Terms] y palabras libres con [Title/Abstract], combinados con AND/OR. No incluyas filtros de fecha ni de tipo de estudio. Devuelve SOLO la consulta, en una sola línea, sin comillas externas, sin explicación ni markdown.\n\nPregunta: "+q;
+  return S.sample(prompt).then(function(r){
+    var t=((r&&r.text)||"").replace(/```[a-z]*/g,"").replace(/\s+/g," ").trim();
+    if(t.length<4||t.length>600) return fin(q);
+    return fin(t);
+  },function(e){ if(e&&e.code==="not_granted") throw e; return fin(q); });
+}
+function fetchMeta(ids,done){
+  var out=[], i=0;
+  function next(){
+    if(i>=ids.length) return Promise.resolve(out);
+    var chunk=ids.slice(i,i+5); i+=5;
+    return callMcp(PM,"get_article_metadata",{pmids:chunk}).then(function(r){
+      var arr=(r&&r.articles)||[]; out=out.concat(arr); if(done) done(out.length); return next();
+    });
+  }
+  return next();
+}
+function disenoDe(m,sug){
+  var t=(m.article_types||[]).join(" | ");
+  if(/Randomized Controlled Trial/i.test(t)) return "eca";
+  if(/Meta-Analysis|Systematic Review/i.test(t)) return "rs";
+  if(/Guideline/i.test(t)) return "guia";
+  if(/Review/i.test(t)) return "revision";
+  var ok=Object.keys(DISENOS); return ok.indexOf(sug)>=0?sug:"otro";
+}
+function limpiar(o){
+  Object.keys(o).forEach(function(k){ var v=o[k]; if(v===null||v===undefined||v===""||(Array.isArray(v)&&!v.length)) delete o[k]; });
+  return o;
+}
+function docDesdePubmed(m,est,tema){
+  var id=m.identifiers||{}, j=m.journal||{}, c=m.citation||{}, pd=m.publication_date||{};
+  var res=(est&&est.resumen)||{};
+  var rs={}; ["pregunta","poblacion","intervencion","comparador","resultado","limitaciones","docencia"].forEach(function(k){ rs[k]=String(res[k]||""); });
+  if(!m.abstract) rs.limitaciones="PubMed no incluye el abstract de este artículo; revisa el texto original.";
+  var d={
+    titulo:String(m.title||"").replace(/[.\s]+$/,""),
+    autores:(m.authors||[]).map(function(a){ return ((a.last_name||"")+" "+(a.initials||"")).trim(); }).filter(Boolean),
+    autoresCompletos:true,
+    revista:j.iso_abbreviation||j.title||"",
+    anio:pd.year?Number(pd.year):null,
+    volumen:c.volume?(c.volume+(c.issue?("("+c.issue+")"):"")):"",
+    paginas:c.pages||"",
+    doi:id.doi||m.doi||"",
+    pmid:id.pmid||"",
+    url:id.pmid?("https://pubmed.ncbi.nlm.nih.gov/"+id.pmid+"/"):"",
+    diseno:disenoDe(m,est&&est.diseno),
+    etiquetas:(m.keywords||[]).slice(0,8),
+    resumen:rs, tema:tema, estado:"candidato", relevancia:0,
+    fuente:m.abstract?"abstract (PubMed)":"sin abstract (PubMed)",
+    creado:new Date().toISOString().slice(0,10)
+  };
+  return limpiar(d);
+}
+function estructurarLote(arts){
+  var datos=arts.map(function(m){ return {pmid:(m.identifiers||{}).pmid,titulo:m.title,tipos:m.article_types||[],abstract:m.abstract||""}; });
+  var prompt="Eres un asistente de literatura médica. Para cada artículo del arreglo, usando SOLO su abstract, devuelve un arreglo JSON válido (sin texto adicional ni markdown) con un objeto por artículo: {pmid, diseno (uno de: rs, eca, cohorte, guia, revision, otro), resumen:{pregunta, poblacion, intervencion, comparador, resultado, limitaciones, docencia}}. "+
+  "Reglas: no inventes datos; si algo no aparece, deja cadena vacía; copia las cifras exactamente como están en el abstract; 'limitaciones' solo con lo que el abstract indica o con límites evidentes del diseño; 'docencia' es un mensaje de una frase que se desprenda solo de lo reportado. Escribe en español.\n\nARTÍCULOS:\n"+JSON.stringify(datos);
+  return S.sample(prompt,{modelTier:"complex"}).then(function(r){
+    if(r&&r.truncated) throw {code:"truncated"};
+    var raw=(r&&r.text)||"", i=raw.indexOf("["), j=raw.lastIndexOf("]");
+    var arr=JSON.parse(raw.slice(i,j+1)); var mp={};
+    arr.forEach(function(x){ if(x&&x.pmid) mp[String(x.pmid)]=x; });
+    return mp;
+  });
+}
+function bmsg(t){ S.bu.msg=t; var el=$("#bu-msg"); if(el) el.textContent=t; }
+function buscarPubmed(){
+  var b=S.bu, q=(b.q||"").trim();
+  if(b.busy) return;
+  if(!q){ bmsg("Escribe primero la pregunta."); return; }
+  if(!S.mcp||!S.db){ bmsg("La búsqueda en PubMed no está disponible en esta vista."); return; }
+  var tema=(b.carp||"").trim()||"Sin tema", estr="", ids=[], total=0, nuevos=0, dup=0;
+  b.busy=true; b.err=""; b.estr=""; b.msg="Armando la estrategia de búsqueda…"; render();
+  estrategiaPubmed(q,b.tipo).then(function(e){
+    estr=e; b.estr=e; bmsg("Buscando en PubMed…");
+    var inp={query:estr,max_results:12,sort:"relevance"}; if(b.desde) inp.date_from=String(b.desde);
+    return callMcp(PM,"search_articles",inp);
+  }).then(function(r){
+    ids=((r&&r.pmids)||[]).map(String); total=(r&&r.total_count)||ids.length;
+    if(!ids.length) throw {code:"sin_resultados"};
+    var ya={}; S.items.forEach(function(a){ if(a.pmid) ya[String(a.pmid)]=1; });
+    var nuevosIds=ids.filter(function(x){return !ya[x];}); dup=ids.length-nuevosIds.length;
+    if(!nuevosIds.length){ return registrarBusqueda(q,tema,estr,total,ids,0,dup).then(function(){ throw {code:"todos_repetidos"}; }); }
+    bmsg("Leyendo "+nuevosIds.length+" abstracts de PubMed…");
+    return fetchMeta(nuevosIds,function(n){ bmsg("Leyendo abstracts de PubMed… "+n+"/"+nuevosIds.length); });
+  }).then(function(metas){
+    var lotes=[], i; for(i=0;i<metas.length;i+=4) lotes.push(metas.slice(i,i+4));
+    var hechos=0;
+    function paso(k){
+      if(k>=lotes.length) return Promise.resolve();
+      var lote=lotes[k], conAbs=lote.filter(function(m){return m.abstract;});
+      bmsg("Estructurando resúmenes con Claude… "+hechos+"/"+metas.length);
+      var p=conAbs.length?estructurarLote(conAbs):Promise.resolve({});
+      return p.then(function(mp){
+        return lote.reduce(function(chain,m){
+          return chain.then(function(){
+            var pid=String((m.identifiers||{}).pmid||"");
+            return S.db.collection("articles").add(docDesdePubmed(m,mp[pid],tema)).then(function(){ hechos++; nuevos++; });
+          });
+        },Promise.resolve());
+      }).then(function(){ return paso(k+1); });
+    }
+    return paso(0);
+  }).then(function(){
+    return registrarBusqueda(q,tema,estr,total,ids,nuevos,dup);
+  }).then(function(){
+    b.busy=false; b.msg=""; S.tab="candidatos"; render(); toast(nuevos+" candidato"+(nuevos===1?"":"s")+" nuevo"+(nuevos===1?"":"s")+(dup?(" · "+dup+" ya estaban"):""));
+  }).catch(function(e){
+    b.busy=false; b.err=mcpErr(e); b.msg=""; render();
+  });
+}
+function registrarBusqueda(q,tema,estr,total,ids,nuevos,dup){
+  try{ return Promise.resolve(S.db.collection("busquedas").add(limpiar({pregunta:q,tema:tema,tipo:S.bu.tipo||"",desde:S.bu.desde||"",fecha:new Date().toISOString().slice(0,10),consulta:estr,total:total,revisados:ids.length,nuevos:nuevos,duplicados:dup,pmids:ids,origen:"app"}))); }catch(e){ return Promise.resolve(); }
+}
+
+/* ---------- v9: PDF ---------- */
+function pdfSan(s){
+  var mp={"≥":">=","≤":"<=","→":"->","←":"<-","−":"-","‐":"-","‑":"-","–":"-","—":"-","∼":"~","≈":"~","′":"'","″":'"',"‘":"'","’":"'","“":'"',"”":'"',"…":"...","•":"-","·":"|","α":"alfa","β":"beta","κ":"kappa"," ":" "," ":" "," ":" "};
+  return String(s==null?"":s).replace(/[^\x00-\x7F¡-ÿ]/g,function(c){ return mp[c]!==undefined?mp[c]:""; });
+}
+function pdfNew(label){
+  var J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw {code:"nopdf"};
+  var P={d:new J({unit:"pt",format:"a4"}),W:595.28,H:841.89,m:46,y:0};
+  P.d.setFillColor(164,36,59); P.d.rect(0,0,P.W,34,"F");
+  P.d.setTextColor(255,255,255); P.d.setFont("helvetica","bold"); P.d.setFontSize(10.5);
+  P.d.text(pdfSan(label.toUpperCase()),P.m,21);
+  P.y=34+22; return P;
+}
+function pdfNeed(P,h){ if(P.y+h>P.H-58){ P.d.addPage(); P.y=P.m; } }
+function pdfP(P,text,o){
+  o=o||{}; var size=o.size||10, ind=o.indent||0, lh=size*1.38;
+  P.d.setFont("helvetica",o.bold?"bold":(o.italic?"italic":"normal")); P.d.setFontSize(size);
+  var c=o.color||[34,40,52]; P.d.setTextColor(c[0],c[1],c[2]);
+  var lines=P.d.splitTextToSize(pdfSan(text),P.W-2*P.m-ind);
+  lines.forEach(function(ln){ pdfNeed(P,lh); P.d.text(ln,P.m+ind,P.y+size*0.85); P.y+=lh; });
+  P.y+=(o.after===undefined?4:o.after);
+}
+function pdfH(P,text){
+  pdfNeed(P,40); P.y+=8;
+  P.d.setFont("helvetica","bold"); P.d.setFontSize(12); P.d.setTextColor(164,36,59);
+  P.d.text(pdfSan(text),P.m,P.y+11); P.y+=17;
+  P.d.setDrawColor(220,224,232); P.d.setLineWidth(0.8); P.d.line(P.m,P.y,P.W-P.m,P.y); P.y+=8;
+}
+function pdfBox(P,text,o){
+  o=o||{}; var size=o.size||10, pad=9, lh=size*1.38;
+  P.d.setFont("helvetica",o.bold?"bold":"normal"); P.d.setFontSize(size);
+  var lines=P.d.splitTextToSize(pdfSan(text),P.W-2*P.m-2*pad), h=lines.length*lh+2*pad;
+  pdfNeed(P,h+4);
+  var f=o.fill||[243,245,249], s=o.stroke||[200,206,218];
+  P.d.setFillColor(f[0],f[1],f[2]); P.d.setDrawColor(s[0],s[1],s[2]); P.d.setLineWidth(0.8);
+  P.d.roundedRect(P.m,P.y,P.W-2*P.m,h,5,5,"FD");
+  P.d.setTextColor(34,40,52);
+  lines.forEach(function(ln,i){ P.d.text(ln,P.m+pad,P.y+pad+size*0.85+i*lh); });
+  P.y+=h+8;
+}
+function pdfCaja(P,x,w,label,text,col,y0,dry){
+  var size=9.5, pad=8, lh=size*1.36;
+  P.d.setFont("helvetica","normal"); P.d.setFontSize(size);
+  var lines=P.d.splitTextToSize(pdfSan(text||"—"),w-2*pad), h=lines.length*lh+2*pad+13;
+  if(dry) return h;
+  P.d.setFillColor(col[0][0],col[0][1],col[0][2]); P.d.setDrawColor(col[1][0],col[1][1],col[1][2]); P.d.setLineWidth(1);
+  P.d.roundedRect(x,y0,w,dry||h,5,5,"FD");
+  P.d.setFont("helvetica","bold"); P.d.setFontSize(7.5); P.d.setTextColor(col[1][0],col[1][1],col[1][2]);
+  P.d.text(pdfSan(label),x+pad,y0+pad+6);
+  P.d.setFont("helvetica","normal"); P.d.setFontSize(size); P.d.setTextColor(34,40,52);
+  lines.forEach(function(ln,i){ P.d.text(ln,x+pad,y0+pad+13+size*0.85+i*lh); });
+  return h;
+}
+function pdfFlecha(P,x,y){ P.d.setFillColor(120,130,148); P.d.triangle(x-5,y,x+5,y,x,y+7,"F"); }
+function pdfFin(P,extra){
+  var n=P.d.getNumberOfPages();
+  for(var i=1;i<=n;i++){
+    P.d.setPage(i); P.d.setDrawColor(220,224,232); P.d.setLineWidth(0.6); P.d.line(P.m,P.H-44,P.W-P.m,P.H-44);
+    P.d.setFont("helvetica","normal"); P.d.setFontSize(7.5); P.d.setTextColor(110,120,138);
+    P.d.text(pdfSan("Elaborado por Dr. Juan Fernando Carvajal Estupiñán | Cardiólogo e internista | Bucaramanga, Colombia"),P.m,P.H-32);
+    P.d.text("Pagina "+i+" de "+n,P.W-P.m,P.H-32,{align:"right"});
+    P.d.text(pdfSan("Referencias bibliográficas según PubMed (NCBI). Resumen elaborado con IA; verificar con el texto original antes de citar."+(extra?(" "+extra):"")),P.m,P.H-21);
+  }
+  var ab=P.d.output("arraybuffer"), u8=new Uint8Array(ab), bin="";
+  for(var k=0;k<u8.length;k+=8192) bin+=String.fromCharCode.apply(null,u8.subarray(k,k+8192));
+  return {u8:u8,b64:btoa(bin)};
+}
+function nomArchivo(s){ return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w\-]+/g,"_").replace(/^_+|_+$/g,"").slice(0,70)||"archivo"; }
+
+function fichaPDF(a){
+  var P=pdfNew("Ficha bibliográfica");
+  pdfP(P,a.titulo||"",{size:15,bold:true,after:6,color:[24,30,44]});
+  pdfP(P,[NIVEL[a.diseno]||"",DISENOS[a.diseno]||"",a.tema?("Tema: "+a.tema):"","Resumen desde: "+(a.fuente||"abstract")].filter(Boolean).join("  |  "),{size:9,color:[110,120,138],after:8});
+  pdfBox(P,vancouver(a),{size:9.5});
+  var gap=14, wHalf=(P.W-2*P.m-gap)/2, wFull=P.W-2*P.m;
+  var cP0=[[227,235,247],[91,125,177]], cI0=[[246,225,229],[164,36,59]], cC0=[[236,238,242],[123,133,150]], cR0=[[225,240,230],[63,139,90]];
+  var tot=pdfCaja(P,P.m,wFull,"P",sumField(a,"poblacion"),cP0,0,true)+14+Math.max(pdfCaja(P,P.m,wHalf,"I",sumField(a,"intervencion"),cI0,0,true),pdfCaja(P,P.m,wHalf,"C",sumField(a,"comparador"),cC0,0,true))+14+pdfCaja(P,P.m,wFull,"R",sumField(a,"resultado"),cR0,0,true)+12;
+  pdfNeed(P,tot);
+  var y0=P.y;
+  var cP=[[227,235,247],[91,125,177]], cI=[[246,225,229],[164,36,59]], cC=[[236,238,242],[123,133,150]], cR=[[225,240,230],[63,139,90]];
+  var h1=pdfCaja(P,P.m,wFull,"POBLACIÓN",sumField(a,"poblacion"),cP,y0,false);
+  pdfFlecha(P,P.W/2,y0+h1+3); y0+=h1+14;
+  var hi=pdfCaja(P,P.m,wHalf,"INTERVENCIÓN / EXPOSICIÓN",sumField(a,"intervencion"),cI,0,true), hc=pdfCaja(P,P.m+wHalf+gap,wHalf,"COMPARADOR",sumField(a,"comparador"),cC,0,true), hm=Math.max(hi,hc);
+  pdfCajaH(P,P.m,wHalf,"INTERVENCIÓN / EXPOSICIÓN",sumField(a,"intervencion"),cI,y0,hm);
+  pdfCajaH(P,P.m+wHalf+gap,wHalf,"COMPARADOR",sumField(a,"comparador"),cC,y0,hm);
+  pdfFlecha(P,P.W/2,y0+hm+3); y0+=hm+14;
+  var hr=pdfCaja(P,P.m,wFull,"RESULTADO CLAVE",sumField(a,"resultado"),cR,y0,false);
+  P.y=y0+hr+12;
+  [["pregunta","Pregunta"],["limitaciones","Limitaciones"],["docencia","Mensaje para enseñar"]].forEach(function(p){
+    var v=sumField(a,p[0]); if(!v) return;
+    pdfH(P,p[1]); pdfP(P,v,{size:10});
+  });
+  if(a.url){ pdfH(P,"Enlace"); pdfP(P,a.url,{size:9,color:[60,90,160]}); }
+  return pdfFin(P);
+}
+function pdfCajaH(P,x,w,label,text,col,y0,h){
+  var size=9.5, pad=8, lh=size*1.36;
+  P.d.setFont("helvetica","normal"); P.d.setFontSize(size);
+  var lines=P.d.splitTextToSize(pdfSan(text||"—"),w-2*pad);
+  P.d.setFillColor(col[0][0],col[0][1],col[0][2]); P.d.setDrawColor(col[1][0],col[1][1],col[1][2]); P.d.setLineWidth(1);
+  P.d.roundedRect(x,y0,w,h,5,5,"FD");
+  P.d.setFont("helvetica","bold"); P.d.setFontSize(7.5); P.d.setTextColor(col[1][0],col[1][1],col[1][2]);
+  P.d.text(pdfSan(label),x+pad,y0+pad+6);
+  P.d.setFont("helvetica","normal"); P.d.setFontSize(size); P.d.setTextColor(34,40,52);
+  lines.forEach(function(ln,i){ P.d.text(ln,x+pad,y0+pad+13+size*0.85+i*lh); });
+}
+function analisisPDF(a){
+  var P=pdfNew("Revisión express");
+  pdfP(P,a.titulo||"",{size:15,bold:true,after:6,color:[24,30,44]});
+  pdfP(P,["Tema: "+(a.tema||"—"),"Versión "+(a.version||1),a.fecha||""].join("  |  "),{size:9,color:[110,120,138],after:8});
+  pdfBox(P,a.mensaje||"",{size:10.5,bold:true,fill:[246,225,229],stroke:[164,36,59]});
+  if((a.cambios||[]).length){ pdfH(P,"Cambios respecto a la versión anterior"); a.cambios.forEach(function(c){ pdfP(P,"- "+c,{size:10,indent:6,after:2}); }); }
+  var pq=a.pregunta||{};
+  pdfH(P,"Pregunta"); pdfP(P,pq.texto||"",{size:10.5,bold:true});
+  [["P","p"],["I","i"],["C","c"],["O","o"]].forEach(function(x){ if(pq[x[1]]) pdfP(P,x[0]+": "+pq[x[1]],{size:9.5,indent:6,after:1}); });
+  if(a.alcance) pdfP(P,a.alcance,{size:9.5,color:[110,120,138]});
+  pdfH(P,"Estudios incluidos");
+  (a.incluidos||[]).forEach(function(i){ pdfP(P,"- "+[i.corto,i.diseno,i.n,i.fuente].filter(Boolean).join(" | "),{size:9.5,indent:6,after:2}); });
+  (a.excluidos||[]).forEach(function(i){ pdfP(P,"- Excluido: "+[i.corto,i.motivo].filter(Boolean).join(": "),{size:9.5,indent:6,after:2,color:[110,120,138]}); });
+  pdfH(P,"Evidencia por desenlace");
+  pdfP(P,"La certeza es un juicio cualitativo, no una evaluación GRADE formal.",{size:8.5,italic:true,color:[110,120,138]});
+  (a.desenlaces||[]).forEach(function(d){
+    pdfNeed(P,60);
+    pdfP(P,(d.nombre||"")+"  (certeza: "+(d.certeza||"—")+")",{size:10.5,bold:true,after:2});
+    (d.filas||[]).forEach(function(f){ var g=SG[f.v]||SG.na; pdfP(P,"- "+(f.est||"")+" ["+g[1]+"]: "+(f.texto||""),{size:9.5,indent:8,after:1}); });
+    if(d.lectura) pdfP(P,"Lectura: "+d.lectura,{size:9.5,indent:8,after:1});
+    if(d.motivo) pdfP(P,d.motivo,{size:9,indent:8,color:[110,120,138],after:6});
+  });
+  pdfH(P,"Vacíos de evidencia");
+  (a.vacios||[]).forEach(function(v,i){ pdfP(P,(i+1)+". "+(v.t||""),{size:10,bold:true,after:1}); if(v.d) pdfP(P,v.d,{size:9.5,indent:10,after:5}); });
+  pdfH(P,"Preguntas de investigación (PICO)");
+  (a.preguntas||[]).forEach(function(q,i){
+    pdfNeed(P,70);
+    pdfP(P,(i+1)+". "+(q.t||""),{size:10,bold:true,after:1});
+    [["P","p"],["I","i"],["C","c"],["O","o"]].forEach(function(x){ if(q[x[1]]) pdfP(P,x[0]+": "+q[x[1]],{size:9.5,indent:10,after:0}); });
+    if(q.diseno) pdfP(P,"Diseño sugerido: "+q.diseno,{size:9.5,indent:10,after:0});
+    if(q.por) pdfP(P,"Por qué: "+q.por,{size:9.5,indent:10,after:6});
+  });
+  if((a.limitaciones||[]).length){ pdfH(P,"Limitaciones de esta revisión"); a.limitaciones.forEach(function(l){ pdfP(P,"- "+l,{size:9.5,indent:6,after:2}); }); }
+  if((a.referencias||[]).length){ pdfH(P,"Referencias"); a.referencias.forEach(function(r,i){ pdfP(P,(i+1)+". "+r,{size:8.5,indent:6,after:3}); }); }
+  return pdfFin(P);
+}
+function busquedasPDF(tema){
+  var P=pdfNew("Estrategias de búsqueda");
+  pdfP(P,"Tema: "+tema,{size:15,bold:true,after:6,color:[24,30,44]});
+  var its=S.items.filter(function(a){return temaDe(a)===tema;}), n=function(e){return its.filter(function(a){return (a.estado||"candidato")===e;}).length;};
+  pdfP(P,"Fecha: "+new Date().toISOString().slice(0,10)+"  |  Candidatos: "+n("candidato")+"  |  Guardados: "+n("guardado")+"  |  Descartados: "+n("descartado"),{size:9,color:[110,120,138],after:8});
+  var bs=S.bq.filter(function(b){return (b.tema||"Sin tema")===tema;}).sort(function(a,b){return String(a.fecha).localeCompare(String(b.fecha));});
+  pdfH(P,"Búsquedas realizadas");
+  if(!bs.length) pdfP(P,"No hay búsquedas registradas para este tema.",{size:10});
+  bs.forEach(function(b,i){
+    pdfNeed(P,70);
+    pdfP(P,(i+1)+". "+(b.fecha||"")+" - "+(b.pregunta||""),{size:10,bold:true,after:1});
+    if(b.consulta) pdfP(P,"Consulta PubMed: "+b.consulta,{size:9,indent:10,after:1});
+    var det=[]; if(b.tipo) det.push("Tipo: "+b.tipo); if(b.desde) det.push("Desde: "+b.desde);
+    if(b.total!==undefined) det.push("Encontrados: "+b.total+" | Revisados: "+(b.revisados||0)+" | Nuevos: "+(b.nuevos||0)+" | Ya en biblioteca: "+(b.duplicados||0));
+    if(!b.consulta && b.origen!=="app") det.push("Búsqueda hecha en el chat con Claude");
+    if(det.length) pdfP(P,det.join("  |  "),{size:9,indent:10,color:[110,120,138],after:5});
+  });
+  pdfH(P,"Artículos del tema y su decisión");
+  its.sort(function(a,b){return String(a.estado).localeCompare(String(b.estado))||(b.anio||0)-(a.anio||0);}).forEach(function(a){
+    pdfP(P,"["+((a.estado||"candidato")).toUpperCase()+"] "+shortCite(a)+" - "+(a.titulo||""),{size:9,indent:6,after:2});
+  });
+  return pdfFin(P);
+}
+function guardarPdf(filename,pdf){
+  if(!S.downloads) return Promise.reject({code:"no_downloads"});
+  var blob; try{ blob=new Blob([pdf.u8],{type:"application/pdf"}); }catch(e){ blob=null; }
+  return Promise.resolve(blob?S.downloads.save({filename:filename,data:blob}):Promise.reject({code:"x"})).catch(function(e){
+    if(e&&e.code==="declined") throw e;
+    return S.downloads.save({filename:filename,data:pdf.u8});
+  });
+}
+function pdfDe(kind,obj){
+  if(kind==="ficha") return {pdf:fichaPDF(obj),name:"Ficha_"+nomArchivo((obj.autores&&obj.autores[0]||"ficha").split(" ")[0]+"_"+(obj.anio||"")+"_"+(obj.pmid||obj.id))+".pdf"};
+  if(kind==="analisis") return {pdf:analisisPDF(obj),name:"Analisis_"+nomArchivo(obj.tema||obj.id)+"_v"+(obj.version||1)+".pdf"};
+  return {pdf:busquedasPDF(obj),name:"Estrategias_de_busqueda_"+nomArchivo(obj)+".pdf"};
+}
+function descargarPdf(kind,obj){
+  var r; try{ r=pdfDe(kind,obj); }catch(e){ toast(mcpErr(e)); return; }
+  guardarPdf(r.name,r.pdf).then(function(){ toast("PDF listo"); },function(e){ if(!e||e.code!=="declined") toast("No se pudo generar la descarga."); });
+}
+
+/* ---------- v9: Google Drive ---------- */
+function firstFile(o,depth){
+  depth=depth||0; if(!o||depth>4) return null;
+  if(Array.isArray(o)){ for(var i=0;i<o.length;i++){ var r=firstFile(o[i],depth+1); if(r) return r; } return null; }
+  if(typeof o==="object"){
+    if(typeof o.id==="string"&&o.id.length>5) return o;
+    var ks=["files","items","results","file","data"]; for(var j=0;j<ks.length;j++){ if(o[ks[j]]){ var r2=firstFile(o[ks[j]],depth+1); if(r2) return r2; } }
+  }
+  return null;
+}
+function qs(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
+function driveCarpeta(nombre,padre){
+  var q="title = '"+qs(nombre)+"' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"+(padre?(" and parentId = '"+qs(padre)+"'"):"");
+  return callMcp(DR,"search_files",{query:q,pageSize:5,excludeContentSnippets:true}).then(function(r){
+    var f=firstFile(r); if(f) return f.id;
+    var inp={title:nombre,mimeType:"application/vnd.google-apps.folder"}; if(padre) inp.parentId=padre;
+    return callMcp(DR,"create_file",inp).then(function(c){
+      var f2=firstFile(c); if(f2) return f2.id;
+      throw {code:"drive_sin_id",message:"Drive no devolvió el id de la carpeta"};
+    });
+  });
+}
+function driveEstado(){
+  return Promise.resolve(S.db.collection("drive").get()).then(function(snap){
+    var rows=rowsOf(snap), d=rows.filter(function(x){return x.id==="carpetas";})[0];
+    return d||{id:"carpetas",raiz:"",temas:{}};
+  },function(){ return {id:"carpetas",raiz:"",temas:{}}; });
+}
+function driveCarpetaTema(tema){
+  return driveEstado().then(function(est){
+    est.temas=est.temas||{};
+    var cambio=false;
+    return Promise.resolve(est.raiz||driveCarpeta(RAIZ,null)).then(function(raiz){
+      if(raiz!==est.raiz){ est.raiz=raiz; cambio=true; }
+      var k=slugTema(tema);
+      return Promise.resolve(est.temas[k]||driveCarpeta(tema,raiz)).then(function(tid){
+        if(tid!==est.temas[k]){ est.temas[k]=tid; cambio=true; }
+        var doc={raiz:est.raiz,temas:est.temas};
+        var w=cambio?Promise.resolve(S.db.collection("drive").doc("carpetas").set(doc)).catch(function(){}):Promise.resolve();
+        return w.then(function(){ return tid; });
+      });
+    });
+  });
+}
+function driveSubir(carpetaId,nombre,pdf){
+  return callMcp(DR,"create_file",{title:nombre,base64Content:pdf.b64,contentMimeType:"application/pdf",disableConversionToGoogleType:true,parentId:carpetaId}).then(function(r){
+    var f=firstFile(r); return f?f.id:"ok";
+  });
+}
+function exMsg(t){ S.ex.msg=t; var el=$("#ex-msg"); if(el) el.textContent=t; }
+function enDrive(kind,obj,tema){
+  if(!S.drive||!S.db){ toast("Drive no está disponible en esta vista."); return Promise.resolve(); }
+  toast("Guardando en Drive…");
+  var r; try{ r=pdfDe(kind,obj); }catch(e){ toast(mcpErr(e)); return Promise.resolve(); }
+  return driveCarpetaTema(tema).then(function(cid){ return driveSubir(cid,r.name,r.pdf); }).then(function(fid){
+    if(kind==="ficha") save(obj.id,{driveId:String(fid),driveFecha:new Date().toISOString().slice(0,10)});
+    toast("Guardado en Drive: "+RAIZ+" / "+tema);
+  }).catch(function(e){ toast(mcpErr(e)); });
+}
+function exportarTema(tema){
+  if(S.ex.busy) return;
+  if(!S.drive||!S.db){ toast("Drive no está disponible en esta vista."); return; }
+  S.ex={busy:true,tema:tema,msg:"Preparando carpeta en Drive…",err:""}; render();
+  var ok=0, omit=0, fallos=0, carpeta;
+  var fichas=guardadosDe(tema), an=analisisDe(tema);
+  var tareas=[];
+  tareas.push({n:"estrategias",f:function(){ var r=pdfDe("busquedas",tema); return driveSubir(carpeta,r.name,r.pdf); }});
+  if(an) tareas.push({n:"análisis",f:function(){ var r=pdfDe("analisis",an); return driveSubir(carpeta,r.name,r.pdf).then(function(fid){ return S.db.collection("analisis").doc(an.id).update({driveVersion:an.version||1}); }); }});
+  fichas.forEach(function(a){ if(a.driveId){ omit++; return; } tareas.push({n:"ficha",f:function(){ var r=pdfDe("ficha",a); return driveSubir(carpeta,r.name,r.pdf).then(function(fid){ return S.db.collection("articles").doc(a.id).update({driveId:String(fid),driveFecha:new Date().toISOString().slice(0,10)}); }); }}); });
+  driveCarpetaTema(tema).then(function(cid){
+    carpeta=cid; var i=0;
+    function paso(){
+      if(i>=tareas.length) return Promise.resolve();
+      var t=tareas[i++]; exMsg("Subiendo PDF "+i+" de "+tareas.length+"…");
+      return Promise.resolve().then(t.f).then(function(){ ok++; },function(e){ fallos++; S.ex.err=mcpErr(e); }).then(paso);
+    }
+    return paso();
+  }).then(function(){
+    S.ex.busy=false; S.ex.msg=ok+" PDF subido"+(ok===1?"":"s")+" a Drive ("+RAIZ+" / "+tema+")"+(omit?(" · "+omit+" ficha"+(omit===1?"":"s")+" ya estaba"+(omit===1?"":"n")):"")+(fallos?(" · "+fallos+" con error"):"");
+    render(); toast(fallos?"Exportación con errores":"Exportado a Drive");
+  }).catch(function(e){ S.ex.busy=false; S.ex.err=mcpErr(e); S.ex.msg=""; render(); });
+}
+function probarConexiones(){
+  var out=$("#diag-out"); if(!out) return; var L=[];
+  function put(t){ L.push(t); out.textContent=L.join("\n"); }
+  put("mcp: "+(S.mcp?("sí ("+Object.keys(S.mcp).join(", ")+")"):"no"));
+  put("sample: "+(S.sample?"sí":"no")+" · db: "+(S.db?"sí":"no")+" · descargas: "+(S.downloads?"sí":"no")+" · PDF: "+((window.jspdf&&window.jspdf.jsPDF)?"sí":"no"));
+  if(!S.mcp) return;
+  callMcp(PM,"search_articles",{query:"left ventricular thrombus",max_results:1}).then(function(r){ put("PubMed: ok ("+(((r&&r.pmids)||[]).length)+" resultado)"); },function(e){ put("PubMed: error "+errText(e)); }).then(function(){
+    if(!S.drive){ put("Drive: no disponible en esta versión (los PDF se descargan al teléfono)"); return null; }
+    return callMcp(DR,"search_files",{query:"title = '"+RAIZ+"' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",pageSize:1,excludeContentSnippets:true});
+  }).then(function(r){ if(r===null) return; put("Drive: ok ("+(firstFile(r)?"carpeta existe":"aún sin carpeta")+")"); },function(e){ put("Drive: error "+errText(e)); });
+}
+
+render();
+})();
+</script>
+</body>
+</html>
